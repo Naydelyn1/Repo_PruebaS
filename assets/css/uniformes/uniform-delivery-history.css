@@ -1,0 +1,218 @@
+/* Uniform Delivery History Specific Styles */
+
+/* Color Palette */
+:u797525844_comseproa_db {
+    --bg-white: #ffffff;
+    --bg-dark-blue: #0a253c;
+    --text-gray: #c8c9ca;
+}
+
+/* Container and Layout */
+.uniform-delivery-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: var(--bg-white);
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(10, 37, 60, 0.08);
+}
+
+/* Page Title */
+.uniform-delivery-container h2 {
+    color: var(--bg-dark-blue);
+    border-bottom: 2px solid var(--bg-dark-blue);
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+/* Filter Form Styling */
+.uniform-filter-form {
+    background-color: var(--bg-white);
+    border: 1px solid var(--text-gray);
+    border-radius: 10px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 10px rgba(10, 37, 60, 0.05);
+}
+
+.uniform-filter-form .row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.uniform-filter-form .col-md-4 {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.uniform-filter-form .form-label {
+    color: var(--bg-dark-blue);
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.uniform-filter-form .form-control {
+    border: 1px solid var(--text-gray);
+    border-radius: 6px;
+    padding: 12px 15px;
+    color: var(--bg-dark-blue);
+    transition: all 0.3s ease;
+}
+
+.uniform-filter-form .form-control:focus {
+    border-color: var(--bg-dark-blue);
+    box-shadow: 0 0 0 0.2rem rgba(10, 37, 60, 0.15);
+    outline: none;
+}
+
+/* Button Container */
+.uniform-filter-form .mt-3 {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+/* Buttons */
+.uniform-filter-form .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.uniform-filter-form .btn-primary {
+    background-color: var(--bg-dark-blue);
+    color: var(--bg-white);
+}
+
+.uniform-filter-form .btn-primary:hover {
+    background-color: rgba(10, 37, 60, 0.9);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(10, 37, 60, 0.2);
+}
+
+.uniform-filter-form .btn-secondary {
+    background-color: var(--text-gray);
+    color: var(--bg-dark-blue);
+}
+
+.uniform-filter-form .btn-secondary:hover {
+    background-color: rgba(200, 201, 202, 0.8);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(10, 37, 60, 0.1);
+}
+
+/* Table Styling */
+.uniform-delivery-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(10, 37, 60, 0.08);
+}
+
+.uniform-delivery-table thead {
+    background-color: var(--bg-dark-blue);
+    color: var(--bg-white);
+}
+
+.uniform-delivery-table thead th {
+    padding: 15px;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 1px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.uniform-delivery-table tbody tr {
+    transition: background-color 0.3s ease;
+}
+
+.uniform-delivery-table tbody tr:nth-child(even) {
+    background-color: rgba(200, 201, 202, 0.1);
+}
+
+.uniform-delivery-table tbody tr:hover {
+    background-color: rgba(10, 37, 60, 0.05);
+}
+
+.uniform-delivery-table td {
+    padding: 15px;
+    vertical-align: middle;
+    color: var(--bg-dark-blue);
+    border-bottom: 1px solid var(--text-gray);
+}
+
+.uniform-delivery-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Products List */
+.productos-lista {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.productos-lista li {
+    padding: 8px 0;
+    color: var(--bg-dark-blue);
+    border-bottom: 1px solid rgba(10, 37, 60, 0.1);
+    font-weight: 500;
+}
+
+.productos-lista li:last-child {
+    border-bottom: none;
+}
+
+/* No Results Message */
+.no-results-message {
+    text-align: center;
+    color: var(--bg-dark-blue);
+    padding: 25px;
+    background-color: rgba(200, 201, 202, 0.1);
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+/* Error Message */
+.uniform-error-message {
+    background-color: rgba(231, 76, 60, 0.9);
+    color: var(--bg-white);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(10, 37, 60, 0.1);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .uniform-filter-form .row {
+        flex-direction: column;
+    }
+
+    .uniform-filter-form .col-md-4 {
+        width: 100%;
+    }
+
+    .uniform-filter-form .mt-3 {
+        flex-direction: column;
+    }
+
+    .uniform-filter-form .btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}

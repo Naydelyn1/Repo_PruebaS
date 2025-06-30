@@ -1,0 +1,658 @@
+/* ===================================================================
+   ALMACENES - LISTAR - ESTILOS ESPECÍFICOS
+   COMSEPROA - Sistema de Gestión
+   ================================================================== */
+
+/* ===== VARIABLES ESPECÍFICAS PARA LISTAR ALMACENES ===== */
+:root {
+    --almacenes-card-width: 350px;
+    --almacenes-card-height: 280px;
+    --almacenes-gap: 25px;
+    --almacenes-card-border-radius: 12px;
+    --almacenes-transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --almacenes-shadow: 0 4px 20px rgba(10, 37, 60, 0.08);
+    --almacenes-shadow-hover: 0 8px 30px rgba(10, 37, 60, 0.15);
+}
+
+/* ===== HEADER DE PÁGINA ===== */
+.page-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 30px 0;
+    background: linear-gradient(135deg, rgba(10, 37, 60, 0.05) 0%, rgba(23, 162, 184, 0.05) 100%);
+    border-radius: var(--almacenes-card-border-radius);
+    border: 1px solid rgba(10, 37, 60, 0.1);
+}
+
+.page-header h1 {
+    color: var(--list-primary);
+    font-size: clamp(28px, 4vw, 36px);
+    font-weight: 700;
+    margin-bottom: 15px;
+    background: linear-gradient(135deg, var(--list-primary), #164463);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.page-description {
+    color: var(--list-text-light);
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0;
+    opacity: 0.9;
+}
+
+/* ===== CONTENEDOR PRINCIPAL DE ALMACENES ===== */
+.almacenes-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--almacenes-card-width), 1fr));
+    gap: var(--almacenes-gap);
+    margin-bottom: 40px;
+}
+
+/* ===== TARJETAS DE ALMACENES ===== */
+.almacen-card {
+    background: var(--list-background);
+    border: 2px solid var(--list-border);
+    border-radius: var(--almacenes-card-border-radius);
+    min-height: var(--almacenes-card-height);
+    overflow: hidden;
+    transition: var(--almacenes-transition);
+    box-shadow: var(--almacenes-shadow);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+}
+
+/* Línea decorativa superior */
+.almacen-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--list-primary), var(--list-info), var(--list-success));
+    border-radius: var(--almacenes-card-border-radius) var(--almacenes-card-border-radius) 0 0;
+}
+
+/* Estados de hover */
+.almacen-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: var(--almacenes-shadow-hover);
+    border-color: var(--list-primary);
+}
+
+.almacen-card:active {
+    transform: translateY(-4px) scale(1.01);
+}
+
+/* ===== HEADER DE TARJETA ===== */
+.card-header {
+    padding: 25px 25px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    background: rgba(10, 37, 60, 0.02);
+    border-bottom: 1px solid rgba(10, 37, 60, 0.1);
+}
+
+.card-header h3 {
+    color: var(--list-primary);
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.3;
+    flex: 1;
+    margin-right: 15px;
+}
+
+.card-actions {
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transform: translateX(10px);
+    transition: var(--almacenes-transition);
+}
+
+.almacen-card:hover .card-actions {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.btn-action {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: var(--almacenes-transition);
+    position: relative;
+}
+
+.btn-edit {
+    background: var(--list-info);
+    color: white;
+}
+
+.btn-edit:hover {
+    background: #138496;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+}
+
+.btn-delete {
+    background: var(--list-danger);
+    color: white;
+}
+
+.btn-delete:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+/* ===== CUERPO DE TARJETA ===== */
+.card-body {
+    padding: 20px 25px;
+    flex: 1;
+}
+
+.ubicacion {
+    color: var(--list-text-light);
+    font-size: 15px;
+    font-weight: 500;
+    margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    line-height: 1.4;
+}
+
+.ubicacion i {
+    color: var(--list-info);
+    font-size: 16px;
+    width: 18px;
+    flex-shrink: 0;
+}
+
+/* ===== ESTADÍSTICAS DEL ALMACÉN ===== */
+.warehouse-stats {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.stat-item {
+    text-align: center;
+    flex: 1;
+    padding: 12px 8px;
+    background: linear-gradient(135deg, rgba(10, 37, 60, 0.05), rgba(23, 162, 184, 0.05));
+    border-radius: 8px;
+    border: 1px solid rgba(10, 37, 60, 0.1);
+    transition: var(--almacenes-transition);
+}
+
+.stat-item:hover {
+    background: linear-gradient(135deg, rgba(10, 37, 60, 0.08), rgba(23, 162, 184, 0.08));
+    transform: translateY(-2px);
+}
+
+.stat-value {
+    display: block;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--list-primary);
+    line-height: 1;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    display: block;
+    font-size: 12px;
+    color: var(--list-text-light);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ===== FOOTER DE TARJETA ===== */
+.card-footer {
+    padding: 20px 25px;
+    border-top: 1px solid rgba(10, 37, 60, 0.1);
+    background: rgba(248, 249, 250, 0.8);
+}
+
+.btn-ver {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, var(--list-primary), #164463);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    transition: var(--almacenes-transition);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-ver:hover {
+    background: linear-gradient(135deg, #164463, var(--list-primary));
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(10, 37, 60, 0.3);
+}
+
+.btn-ver i {
+    font-size: 16px;
+}
+
+/* ===== ESTADO VACÍO ===== */
+.empty-state {
+    text-align: center;
+    padding: 80px 40px;
+    background: var(--list-background);
+    border: 2px dashed var(--list-border);
+    border-radius: var(--almacenes-card-border-radius);
+    margin: 40px 0;
+    grid-column: 1 / -1;
+}
+
+.empty-state i {
+    font-size: 64px;
+    color: var(--list-text-light);
+    margin-bottom: 20px;
+    opacity: 0.6;
+}
+
+.empty-state h3 {
+    color: var(--list-primary);
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.empty-state p {
+    color: var(--list-text-light);
+    font-size: 16px;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 25px;
+    background: linear-gradient(135deg, var(--list-primary), #164463);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    transition: var(--almacenes-transition);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(10, 37, 60, 0.3);
+}
+
+/* ===== BARRA DE ACCIONES ===== */
+.action-bar {
+    display: flex;
+    justify-content: center;
+    margin-top: 40px;
+    padding: 30px 0;
+}
+
+.btn-add-warehouse {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 30px;
+    background: linear-gradient(135deg, var(--list-success), #218838);
+    color: white;
+    text-decoration: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 700;
+    transition: var(--almacenes-transition);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: var(--almacenes-shadow);
+}
+
+.btn-add-warehouse:hover {
+    background: linear-gradient(135deg, #218838, var(--list-success));
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(40, 167, 69, 0.3);
+}
+
+.btn-add-warehouse i {
+    font-size: 20px;
+}
+
+/* ===== ALERTAS ===== */
+.alert {
+    padding: 18px 25px;
+    border-radius: var(--almacenes-card-border-radius);
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-weight: 600;
+    box-shadow: var(--almacenes-shadow);
+    border: 1px solid;
+    animation: slideInFromTop 0.5s ease-out;
+}
+
+.alert.success {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
+    color: var(--list-success);
+    border-color: var(--list-success);
+}
+
+.alert.error {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+    color: var(--list-danger);
+    border-color: var(--list-danger);
+}
+
+.alert i {
+    font-size: 20px;
+}
+
+@keyframes slideInFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 1200px) {
+    .almacenes-container {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    :root {
+        --almacenes-card-width: 300px;
+        --almacenes-card-height: 260px;
+    }
+}
+
+@media (max-width: 768px) {
+    .almacenes-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .card-header {
+        padding: 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .card-header h3 {
+        margin-right: 0;
+        margin-bottom: 0;
+    }
+    
+    .card-actions {
+        opacity: 1;
+        transform: translateX(0);
+        align-self: flex-end;
+    }
+    
+    .card-body {
+        padding: 15px 20px;
+    }
+    
+    .card-footer {
+        padding: 15px 20px;
+    }
+    
+    .warehouse-stats {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: left;
+        padding: 12px 15px;
+    }
+    
+    .stat-value {
+        font-size: 18px;
+        margin-bottom: 0;
+    }
+    
+    .stat-label {
+        font-size: 13px;
+    }
+    
+    .page-header {
+        padding: 25px 20px;
+        margin-bottom: 30px;
+    }
+    
+    .empty-state {
+        padding: 60px 30px;
+        margin: 30px 0;
+    }
+    
+    .empty-state i {
+        font-size: 48px;
+    }
+    
+    .empty-state h3 {
+        font-size: 20px;
+    }
+    
+    .btn-add-warehouse {
+        padding: 15px 25px;
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .card-header {
+        padding: 15px;
+    }
+    
+    .card-body {
+        padding: 12px 15px;
+    }
+    
+    .card-footer {
+        padding: 12px 15px;
+    }
+    
+    .btn-ver {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+    
+    .warehouse-stats {
+        gap: 8px;
+    }
+    
+    .stat-item {
+        padding: 10px 12px;
+    }
+    
+    .stat-value {
+        font-size: 16px;
+    }
+    
+    .stat-label {
+        font-size: 12px;
+    }
+    
+    .empty-state {
+        padding: 40px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 40px;
+    }
+    
+    .empty-state h3 {
+        font-size: 18px;
+    }
+    
+    .empty-state p {
+        font-size: 14px;
+    }
+    
+    .btn-primary,
+    .btn-add-warehouse {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+    
+    .alert {
+        padding: 15px 20px;
+        font-size: 14px;
+    }
+}
+
+/* ===== MODO LANDSCAPE MÓVIL ===== */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+    .almacenes-container {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 15px;
+    }
+    
+    .page-header {
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+    
+    .empty-state {
+        padding: 40px 30px;
+    }
+    
+    :root {
+        --almacenes-card-height: 220px;
+    }
+}
+
+/* ===== ACCESIBILIDAD ===== */
+.keyboard-navigation .almacen-card:focus {
+    outline: 3px solid var(--list-warning) !important;
+    outline-offset: 3px !important;
+}
+
+.keyboard-navigation .btn-action:focus,
+.keyboard-navigation .btn-ver:focus,
+.keyboard-navigation .btn-primary:focus,
+.keyboard-navigation .btn-add-warehouse:focus {
+    outline: 3px solid var(--list-warning) !important;
+    outline-offset: 2px !important;
+}
+
+/* Reducir movimiento para usuarios con preferencias de accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+    .almacen-card,
+    .btn-action,
+    .btn-ver,
+    .btn-primary,
+    .btn-add-warehouse,
+    .stat-item {
+        animation: none !important;
+        transition: none !important;
+    }
+    
+    .almacen-card:hover,
+    .btn-action:hover,
+    .btn-ver:hover,
+    .btn-primary:hover,
+    .btn-add-warehouse:hover {
+        transform: none !important;
+    }
+}
+
+/* ===== MEJORAS DE CONTRASTE ===== */
+@media (prefers-contrast: high) {
+    .almacen-card {
+        border: 3px solid var(--list-primary);
+    }
+    
+    .btn-action,
+    .btn-ver,
+    .btn-primary,
+    .btn-add-warehouse {
+        border: 2px solid currentColor;
+    }
+    
+    .stat-item {
+        border: 2px solid var(--list-primary);
+    }
+}
+
+/* ===== ANIMACIONES ADICIONALES ===== */
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: var(--almacenes-shadow);
+    }
+    50% {
+        box-shadow: var(--almacenes-shadow-hover);
+    }
+}
+
+.almacen-card.highlight {
+    animation: pulseGlow 2s ease-in-out;
+}
+
+/* ===== TOOLTIPS PARA BOTONES DE ACCIÓN ===== */
+.btn-action {
+    position: relative;
+}
+
+.btn-action::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+}
+
+.btn-action:hover::after {
+    opacity: 1;
+}
+
+/* ===== FINAL DEL ARCHIVO ===== */

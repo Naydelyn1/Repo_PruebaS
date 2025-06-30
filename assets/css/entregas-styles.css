@@ -1,0 +1,126 @@
+/* Color Palette */
+:u797525844_comseproa_db {
+    --color-background: #ffffff;
+    --color-primary: #0a253c;
+    --color-secondary: #c8c9ca;
+}
+
+/* Zona de seleccionados */
+#zona-seleccionados {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: var(--color-background);
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 350px;
+    width: 100%;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    transform: translateY(100%);
+    opacity: 0;
+    visibility: hidden;
+    padding: 15px;
+}
+
+#zona-seleccionados.activo {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Botón para mostrar/ocultar seleccionados */
+#btn-toggle-seleccionados {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: var(--color-primary);
+    color: var(--color-background);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    z-index: 1001;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#btn-toggle-seleccionados .contador {
+    background-color: red;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    margin-left: 5px;
+    font-size: 0.8em;
+}
+
+/* Botones */
+.btn {
+    background-color: var(--color-primary);
+    color: var(--color-background);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    margin: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn:hover {
+    background-color: var(--color-secondary);
+    transform: translateY(-2px);
+}
+
+/* Checkboxes */
+.producto-checkbox {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background-color: var(--color-background);
+    border: 2px solid var(--color-primary);
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.producto-checkbox:checked {
+    background-color: var(--color-primary);
+}
+
+.producto-checkbox:checked::after {
+    content: '✓';
+    color: var(--color-background);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Productos seleccionados */
+.producto-seleccionado {
+    background-color: var(--color-secondary);
+    border-radius: 6px;
+    padding: 10px;
+    margin: 5px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.producto-seleccionado:hover {
+    background-color: var(--color-primary);
+    color: var(--color-background);
+}
+
+/* Cantidad de producto */
+.cantidad-producto input {
+    width: 50px;
+    margin: 0 10px;
+    padding: 5px;
+    border: 1px solid var(--color-secondary);
+    border-radius: 4px;
+    text-align: center;
+}
