@@ -15,7 +15,7 @@ $user_name = $_SESSION["user_name"] ?? "Usuario";
 $usuario_rol = $_SESSION["user_role"] ?? "usuario";
 $usuario_almacen_id = $_SESSION["almacen_id"] ?? null;
 
-// Configuración de paginación optimizada - CAMBIADO DE 15 A 10
+// Configuración de paginación optimizada
 $productos_por_pagina = 10;
 $pagina_actual = isset($_GET['pagina']) ? max(1, (int)$_GET['pagina']) : 1;
 $offset = ($pagina_actual - 1) * $productos_por_pagina;
@@ -25,7 +25,7 @@ $filtro_almacen_id = isset($_GET['almacen_id']) ? (int)$_GET['almacen_id'] : nul
 $filtro_categoria_id = isset($_GET['categoria_id']) ? (int)$_GET['categoria_id'] : null;
 $busqueda = isset($_GET['busqueda']) ? trim($_GET['busqueda']) : '';
 
-// ⭐ FUNCIÓN PARA CONSTRUIR PARÁMETROS DE CONTEXTO
+// Función para construir parámetros de contexto
 function construirParametrosContexto() {
     global $filtro_almacen_id, $filtro_categoria_id, $busqueda, $pagina_actual;
     
@@ -91,7 +91,6 @@ if ($filtro_almacen_id) {
     $params[] = $filtro_almacen_id;
     $param_types .= "i";
 } elseif ($usuario_rol != 'admin' && $usuario_almacen_id) {
-    // Si no es admin, solo mostrar productos de su almacén
     $where_conditions[] = "p.almacen_id = ?";
     $params[] = $usuario_almacen_id;
     $param_types .= "i";
@@ -134,7 +133,7 @@ if (!empty($params)) {
 
 // Calcular paginación
 $total_paginas = ceil($total_productos / $productos_por_pagina);
-$pagina_actual = min($pagina_actual, max(1, $total_paginas)); // Asegurar que no exceda el máximo
+$pagina_actual = min($pagina_actual, max(1, $total_paginas));
 
 // Construir consulta final con paginación
 $sql_productos = $sql_base . $where_clause . " ORDER BY p.nombre LIMIT ? OFFSET ?";
@@ -180,7 +179,6 @@ function buildUrl($params = []) {
     if ($filtro_categoria_id) $url_params['categoria_id'] = $filtro_categoria_id;
     if (!empty($busqueda)) $url_params['busqueda'] = $busqueda;
     
-    // Sobrescribir con parámetros proporcionados
     $url_params = array_merge($url_params, $params);
     
     return 'listar.php' . (!empty($url_params) ? '?' . http_build_query($url_params) : '');
@@ -230,23 +228,18 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
         - GRUPO SEAL
     </title>
     
-    <!-- Meta tags -->
     <meta name="description" content="Lista de productos del sistema GRUPO SEAL - Página <?php echo $pagina_actual; ?> de <?php echo $total_paginas; ?>">
     <meta name="robots" content="noindex, nofollow">
     <meta name="theme-color" content="#0a253c">
     
-    <!-- Preload de recursos críticos -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
-    <!-- CSS específico y limpio -->
     <link rel="stylesheet" href="../assets/css/productos/productos-tabla.css">
     
-    <!-- Prefetch de páginas -->
     <?php if ($pagina_actual < $total_paginas): ?>
     <link rel="prefetch" href="<?php echo buildUrl(['pagina' => $pagina_actual + 1]); ?>">
     <?php endif; ?>
@@ -273,7 +266,7 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
     <i class="fas fa-bars"></i>
 </button>
 
-<!-- ===== SIDEBAR Y NAVEGACIÓN UNIFICADO ===== -->
+<!-- Sidebar Navigation -->
 <nav class="sidebar" id="sidebar" role="navigation" aria-label="Menú principal">
     <h2>GRUPO SEAL</h2>
     <ul>
@@ -283,7 +276,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
             </a>
         </li>
 
-        <!-- Users Section - Only visible to administrators -->
         <?php if ($usuario_rol == 'admin'): ?>
         <li class="submenu-container">
             <a href="#" aria-label="Menú Usuarios" aria-expanded="false" role="button" tabindex="0">
@@ -297,7 +289,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
         </li>
         <?php endif; ?>
 
-        <!-- Warehouses Section - Adjusted according to permissions -->
         <li class="submenu-container">
             <a href="#" aria-label="Menú Almacenes" aria-expanded="false" role="button" tabindex="0">
                 <span><i class="fas fa-warehouse"></i> Almacenes</span>
@@ -311,7 +302,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
             </ul>
         </li>
         
-        <!-- Historial Section - Reemplaza la sección de Entregas -->
         <li class="submenu-container">
             <a href="#" aria-label="Menú Historial" aria-expanded="false" role="button" tabindex="0">
                 <span><i class="fas fa-history"></i> Historial</span>
@@ -323,7 +313,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
             </ul>
         </li>
         
-        <!-- Notifications Section - Con badge rojo de notificaciones -->
         <li class="submenu-container">
             <a href="#" aria-label="Menú Notificaciones" aria-expanded="false" role="button" tabindex="0">
                 <span>
@@ -343,7 +332,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
             </ul>
         </li>
 
-        <!-- Reports Section (Admin only) -->
         <?php if ($usuario_rol == 'admin'): ?>
         <li class="submenu-container">
             <a href="#" aria-label="Menú Reportes" aria-expanded="false" role="button" tabindex="0">
@@ -358,7 +346,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
         </li>
         <?php endif; ?>
 
-        <!-- User Profile -->
         <li class="submenu-container">
             <a href="#" aria-label="Menú Perfil" aria-expanded="false" role="button" tabindex="0">
                 <span><i class="fas fa-user-circle"></i> Mi Perfil</span>
@@ -369,7 +356,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
             </ul>
         </li>
 
-        <!-- Logout -->
         <li>
             <a href="#" onclick="manejarCerrarSesion(event)" aria-label="Cerrar sesión">
                 <span><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</span>
@@ -442,15 +428,12 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
                 </a>
                 <?php endif; ?>
                 
-                <!-- Botón inteligente de retorno -->
                 <?php if ($filtro_almacen_id && $filtro_categoria_id): ?>
-                <!-- Estamos en una categoría específica de un almacén -->
                 <a href="<?php echo obtenerUrlRetornoAlmacen($filtro_almacen_id); ?>" class="btn-header btn-secondary">
                     <i class="fas fa-arrow-left"></i>
                     <span>Volver a Categorías</span>
                 </a>
                 <?php elseif ($filtro_almacen_id): ?>
-                <!-- Estamos en un almacén específico -->
                 <a href="<?php echo obtenerUrlRetornoAlmacen($filtro_almacen_id); ?>" class="btn-header btn-secondary">
                     <i class="fas fa-arrow-left"></i>
                     <span>Volver a Categorías</span>
@@ -460,7 +443,7 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
         </div>
     </header>
 
-    <!-- Breadcrumb mejorado -->
+    <!-- Breadcrumb -->
     <nav class="breadcrumb">
         <a href="../dashboard.php"><i class="fas fa-home"></i> Inicio</a>
         <span><i class="fas fa-chevron-right"></i></span>
@@ -656,7 +639,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
                                 <!-- Acciones -->
                                 <td class="actions-cell">
                                     <div class="action-buttons">
-                                        <!-- ⭐ BOTÓN VER CON LÓGICA ORIGINAL -->
                                         <button class="btn-action btn-view" 
                                                 onclick="verProductoConContexto(<?php echo $producto['id']; ?>)"
                                                 title="Ver detalles">
@@ -682,7 +664,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
                                         <?php endif; ?>
 
                                         <?php if ($usuario_rol == 'admin'): ?>
-                                        <!-- ⭐ BOTÓN EDITAR CON LÓGICA ORIGINAL -->
                                         <button class="btn-action btn-edit" 
                                                 onclick="editarProductoConContexto(<?php echo $producto['id']; ?>)"
                                                 title="Editar producto">
@@ -717,7 +698,7 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
                 </table>
             </div>
 
-            <!-- Paginación MEJORADA -->
+            <!-- Paginación -->
             <?php if ($total_paginas > 1): ?>
             <div class="pagination-container">
                 <div class="pagination-info">
@@ -728,7 +709,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
                 
                 <nav class="pagination" aria-label="Navegación de páginas">
                     <?php if ($pagina_actual > 1): ?>
-                        <!-- Primera página -->
                         <a href="<?php echo buildUrl(['pagina' => 1]); ?>" 
                            class="pagination-btn first" 
                            title="Primera página"
@@ -736,7 +716,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
                             <i class="fas fa-angle-double-left"></i>
                         </a>
                         
-                        <!-- Página anterior -->
                         <a href="<?php echo buildUrl(['pagina' => $pagina_actual - 1]); ?>" 
                            class="pagination-btn prev" 
                            title="Página anterior"
@@ -744,7 +723,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
                             <i class="fas fa-angle-left"></i>
                         </a>
                     <?php else: ?>
-                        <!-- Botones deshabilitados -->
                         <span class="pagination-btn first disabled" title="Primera página">
                             <i class="fas fa-angle-double-left"></i>
                         </span>
@@ -754,11 +732,9 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
                     <?php endif; ?>
 
                     <?php
-                    // Calcular rango de páginas a mostrar
                     $rango_inicio = max(1, $pagina_actual - 2);
                     $rango_fin = min($total_paginas, $pagina_actual + 2);
                     
-                    // Ajustar para mostrar siempre 5 páginas cuando sea posible
                     if ($rango_fin - $rango_inicio < 4) {
                         if ($rango_inicio == 1) {
                             $rango_fin = min($total_paginas, $rango_inicio + 4);
@@ -767,7 +743,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
                         }
                     }
                     
-                    // Mostrar "..." si hay páginas anteriores
                     if ($rango_inicio > 1): ?>
                         <a href="<?php echo buildUrl(['pagina' => 1]); ?>" class="pagination-btn">1</a>
                         <?php if ($rango_inicio > 2): ?>
@@ -775,10 +750,7 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
                         <?php endif; ?>
                     <?php endif; ?>
                     
-                    <?php
-                    // Mostrar páginas en el rango
-                    for ($i = $rango_inicio; $i <= $rango_fin; $i++):
-                    ?>
+                    <?php for ($i = $rango_inicio; $i <= $rango_fin; $i++): ?>
                         <?php if ($i == $pagina_actual): ?>
                             <span class="pagination-btn current" 
                                   aria-label="Página actual, página <?php echo $i; ?>"
@@ -794,9 +766,7 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
                         <?php endif; ?>
                     <?php endfor; ?>
                     
-                    <?php
-                    // Mostrar "..." si hay páginas posteriores
-                    if ($rango_fin < $total_paginas): ?>
+                    <?php if ($rango_fin < $total_paginas): ?>
                         <?php if ($rango_fin < $total_paginas - 1): ?>
                             <span class="pagination-ellipsis">...</span>
                         <?php endif; ?>
@@ -806,7 +776,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
                     <?php endif; ?>
 
                     <?php if ($pagina_actual < $total_paginas): ?>
-                        <!-- Página siguiente -->
                         <a href="<?php echo buildUrl(['pagina' => $pagina_actual + 1]); ?>" 
                            class="pagination-btn next" 
                            title="Página siguiente"
@@ -814,7 +783,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
                             <i class="fas fa-angle-right"></i>
                         </a>
                         
-                        <!-- Última página -->
                         <a href="<?php echo buildUrl(['pagina' => $total_paginas]); ?>" 
                            class="pagination-btn last" 
                            title="Última página"
@@ -822,7 +790,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
                             <i class="fas fa-angle-double-right"></i>
                         </a>
                     <?php else: ?>
-                        <!-- Botones deshabilitados -->
                         <span class="pagination-btn next disabled" title="Página siguiente">
                             <i class="fas fa-angle-right"></i>
                         </span>
@@ -832,7 +799,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
                     <?php endif; ?>
                 </nav>
                 
-                <!-- Información adicional -->
                 <div class="pagination-summary">
                     <small>
                         Página <?php echo $pagina_actual; ?> de <?php echo $total_paginas; ?>
@@ -840,7 +806,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
                 </div>
             </div>
             <?php else: ?>
-            <!-- No hay suficientes productos para paginación -->
             <div class="pagination-container single-page">
                 <div class="pagination-info">
                     <i class="fas fa-info-circle"></i>
@@ -881,17 +846,15 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
     </section>
 </main>
 
-<!-- Carrito de Entrega MEJORADO PARA ESQUINA DERECHA -->
+<!-- Carrito de Entrega -->
 <div id="carritoEntrega" class="carrito-entrega">
     <div class="carrito-header">
         <div class="carrito-title">
-            <!-- Versión completa para pantallas normales -->
             <span class="carrito-title-long">
                 <i class="fas fa-hand-holding"></i>
                 Productos para Entrega
             </span>
             
-            <!-- Versión corta para pantallas muy pequeñas -->
             <span class="carrito-title-short">
                 <i class="fas fa-shopping-cart"></i>
                 Entrega
@@ -899,7 +862,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
             
             <span class="carrito-contador">0</span>
         </div>
-        <!-- El botón toggle se agrega dinámicamente -->
     </div>
     
     <div class="carrito-lista" id="carritoLista">
@@ -928,8 +890,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
         </div>
     </div>
 </div>
-
-<!-- El indicador se crea dinámicamente con JavaScript -->
 
 <!-- Modal de Entrega -->
 <div id="modalEntrega" class="modal-entrega">
@@ -1006,7 +966,7 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
     </div>
 </div>
 
-<!-- Modal de Transferencia -->
+<!-- Modal de Transferencia - actualizado-->
 <div id="modalTransferencia" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -1085,7 +1045,6 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
 <!-- Container para notificaciones -->
 <div id="notificaciones-container"></div>
 
-<!-- ⭐ JAVASCRIPT CON LÓGICA ORIGINAL + URLs LIMPIAS -->
 <script>
 // Variables globales para el contexto
 const CONTEXTO_PARAMS = document.body.dataset.context || '';
@@ -1104,7 +1063,7 @@ function guardarContextoProductos() {
     sessionStorage.setItem('productos_context', JSON.stringify(context));
 }
 
-// ⭐ FUNCIONES ORIGINALES CON URLs LIMPIAS
+// Funciones con contexto
 function verProductoConContexto(id) {
     guardarContextoProductos();
     const baseUrl = 'ver-producto.php?id=' + id;
@@ -1128,15 +1087,13 @@ function editarProducto(id) {
     editarProductoConContexto(id);
 }
 
-// Manejar navegación del navegador (botón atrás)
+// Manejar navegación del navegador
 window.addEventListener('popstate', function(event) {
-    // Si viene del almacén y tiene contexto guardado, redirigir correctamente
     const almacenContext = sessionStorage.getItem('almacen_context');
     
     if (almacenContext && FILTRO_ALMACEN_ID) {
         const context = JSON.parse(almacenContext);
         if (context.almacen_id === FILTRO_ALMACEN_ID && context.page === 'ver-almacen') {
-            // Redirigir al almacén de forma segura
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = '../almacenes/ver_redirect.php';
@@ -1155,10 +1112,8 @@ window.addEventListener('popstate', function(event) {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Guardar contexto inicial
     guardarContextoProductos();
     
-    // ⭐ LIMPIAR URL EN EL HISTORIAL (SIN AFECTAR FUNCIONALIDAD)
     if (window.location.search && window.history.replaceState) {
         const cleanUrl = window.location.pathname;
         window.history.replaceState(
