@@ -230,6 +230,7 @@ if ($result_pendientes && $row_pendientes = $result_pendientes->fetch_assoc()) {
             </a>
         </li>
 
+
         <!-- Users Section - Only visible to administrators -->
         <?php if ($usuario_rol == 'admin'): ?>
         <li class="submenu-container">
@@ -258,6 +259,7 @@ if ($result_pendientes && $row_pendientes = $result_pendientes->fetch_assoc()) {
             </ul>
         </li>
         
+
         <!-- Historial Section - Reemplaza la sección de Entregas -->
         <li class="submenu-container">
             <a href="#" aria-label="Menú Historial" aria-expanded="false" role="button" tabindex="0">
@@ -270,6 +272,7 @@ if ($result_pendientes && $row_pendientes = $result_pendientes->fetch_assoc()) {
                 
             </ul>
         </li>
+
         
         <!-- Notifications Section - Con badge rojo de notificaciones -->
         <li class="submenu-container">
@@ -519,6 +522,7 @@ if ($result_pendientes && $row_pendientes = $result_pendientes->fetch_assoc()) {
                 </div>
             </div>
 
+
             <!-- Historial de Movimientos -->
             <div class="movements-card">
                 <div class="card-header">
@@ -573,6 +577,7 @@ if ($result_pendientes && $row_pendientes = $result_pendientes->fetch_assoc()) {
             </div>
         </section>
 
+        
         <!-- Panel Lateral -->
         <aside class="sidebar-panel">
             <!-- Solicitudes de Transferencia -->
