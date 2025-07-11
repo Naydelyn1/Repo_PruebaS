@@ -302,6 +302,7 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
             </ul>
         </li>
         
+
         <li class="submenu-container">
             <a href="#" aria-label="Menú Historial" aria-expanded="false" role="button" tabindex="0">
                 <span><i class="fas fa-history"></i> Historial</span>
@@ -312,6 +313,7 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
                 <li><a href="../notificaciones/historial.php" role="menuitem"><i class="fas fa-exchange-alt"></i> Historial de Solicitudes</a></li>
             </ul>
         </li>
+        
         
         <li class="submenu-container">
             <a href="#" aria-label="Menú Notificaciones" aria-expanded="false" role="button" tabindex="0">
