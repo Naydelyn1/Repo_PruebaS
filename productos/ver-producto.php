@@ -115,7 +115,29 @@ if ($usuario_rol != 'admin' && $usuario_almacen_id != $producto['almacen_id']) {
     exit();
 }
 
-
+// Obtener historial de movimientos del producto
+$sql_movimientos = "SELECT m.*, 
+                    CASE 
+                        WHEN m.tipo = 'transferencia' THEN CONCAT(COALESCE(ao.nombre, 'N/A'), ' → ', COALESCE(ad.nombre, 'N/A'))
+                        WHEN m.tipo = 'entrada' THEN CONCAT('Entrada a ', COALESCE(ao.nombre, 'N/A'))
+                        WHEN m.tipo = 'salida' THEN CONCAT('Salida de ', COALESCE(ao.nombre, 'N/A'))
+                        ELSE 'Movimiento'
+                    END as descripcion_movimiento,
+                    u.nombre as usuario_nombre,
+                    ao.nombre as almacen_origen_nombre,
+                    ad.nombre as almacen_destino_nombre
+                    FROM movimientos m
+                    LEFT JOIN usuarios u ON m.usuario_id = u.id
+                    LEFT JOIN almacenes ao ON m.almacen_origen = ao.id
+                    LEFT JOIN almacenes ad ON m.almacen_destino = ad.id
+                    WHERE m.producto_id = ?
+                    ORDER BY m.fecha DESC
+                    LIMIT 10";
+$stmt_movimientos = $conn->prepare($sql_movimientos);
+$stmt_movimientos->bind_param("i", $producto_id);
+$stmt_movimientos->execute();
+$movimientos = $stmt_movimientos->get_result();
+$stmt_movimientos->close();
 
 // Obtener solicitudes de transferencia relacionadas
 $sql_solicitudes = "SELECT s.*, 
