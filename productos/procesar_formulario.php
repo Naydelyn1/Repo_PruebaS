@@ -485,6 +485,7 @@ function manejarEntregaPersonal($conn, $usuario_id, $data) {
             'productos' => $productos_procesados
         ]);
         
+        
     } catch (Exception $e) {
         // Rollback en caso de error
         $conn->rollback();
