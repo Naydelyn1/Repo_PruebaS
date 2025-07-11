@@ -7,7 +7,6 @@ if (!isset($_SESSION["user_id"])) {
     exit();
 }
 
-
 session_regenerate_id(true);
 require_once "../config/database.php";
 
@@ -502,7 +501,38 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
         <?php if ($result_productos && $result_productos->num_rows > 0): ?>
             <div class="table-container">
                 <table class="products-table" id="productosTabla">
-                    
+                    <thead>
+                        <tr>
+                            <th class="selection-column" style="display: none;">
+                                <div class="selection-header">
+                                    <i class="fas fa-hand-holding"></i>
+                                </div>
+                            </th>
+                            <th class="product-name-column">
+                                <i class="fas fa-box"></i> Producto
+                            </th>
+                            <th class="category-column">
+                                <i class="fas fa-tag"></i> Categoría
+                            </th>
+                            <?php if (!$filtro_almacen_id): ?>
+                            <th class="warehouse-column">
+                                <i class="fas fa-warehouse"></i> Almacén
+                            </th>
+                            <?php endif; ?>
+                            <th class="details-column">
+                                <i class="fas fa-info-circle"></i> Detalles
+                            </th>
+                            <th class="stock-column">
+                                <i class="fas fa-cubes"></i> Stock
+                            </th>
+                            <th class="status-column">
+                                <i class="fas fa-flag"></i> Estado
+                            </th>
+                            <th class="actions-column">
+                                <i class="fas fa-cogs"></i> Acciones
+                            </th>
+                        </tr>
+                    </thead>
                     <tbody>
                         <?php while ($producto = $result_productos->fetch_assoc()): ?>
                             <tr class="product-row" 
