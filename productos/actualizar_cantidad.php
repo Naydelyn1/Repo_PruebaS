@@ -43,6 +43,9 @@ try {
         sendJsonResponse(false, 'Faltan parámetros requeridos (producto_id, accion).');
     }
 
+    $producto_id = filter_var($_POST['producto_id'], FILTER_VALIDATE_INT);
+    $accion = trim($_POST['accion']);
+
     // Validar producto_id
     if (!$producto_id || $producto_id <= 0) {
         http_response_code(400);
@@ -62,9 +65,6 @@ try {
         http_response_code(500);
         sendJsonResponse(false, 'Error de conexión a la base de datos.');
     }
-
-    $producto_id = filter_var($_POST['producto_id'], FILTER_VALIDATE_INT);
-    $accion = trim($_POST['accion']);
 
     // Obtener información actual del producto (usando tu estructura exacta)
     $sql_producto = "SELECT p.id, p.nombre, p.cantidad, p.almacen_id, a.nombre as almacen_nombre 
@@ -212,7 +212,7 @@ try {
         $estado_stock = 'bajo';
     }
     
-    // ⭐ RESPUESTA EXITOSA CON URLs LIMPIAS OPCIONALES
+    // Respuesta exitosa
     $response_data = [
         'nueva_cantidad' => $nueva_cantidad,
         'cantidad_anterior' => $cantidad_actual,
