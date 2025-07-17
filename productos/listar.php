@@ -410,7 +410,12 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
                 </p>
             </div>
             
-          
+            <div class="header-actions">
+                <button id="btnEntregarPersonal" class="btn-entregar-personal" title="Activar modo de selección múltiple">
+                    <i class="fas fa-hand-holding"></i>
+                    <span>Entregar a Personal</span>
+                </button>
+
                 <?php if ($usuario_rol == 'admin'): ?>
                 <a href="registrar.php<?php 
                     $params = [];
