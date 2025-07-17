@@ -918,7 +918,7 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
     </div>
 </div>
 
-<!-- Modal de Transferencia - actualizado-->
+<!-- Modal de Transferencia -->
 <div id="modalTransferencia" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -998,10 +998,34 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
 <div id="notificaciones-container"></div>
 
 <script>
-// Variables globales para el contexto
+// Variables globales para el contexto - ESTA ES LA CLAVE
 const CONTEXTO_PARAMS = document.body.dataset.context || '';
 const FILTRO_ALMACEN_ID = <?php echo $filtro_almacen_id ? $filtro_almacen_id : 'null'; ?>;
 const FILTRO_CATEGORIA_ID = <?php echo $filtro_categoria_id ? $filtro_categoria_id : 'null'; ?>;
+
+// Función para construir URL con contexto preservado - NUEVA
+function construirUrlConContexto() {
+    const params = new URLSearchParams();
+    
+    // Preservar filtros actuales
+    if (FILTRO_ALMACEN_ID) {
+        params.set('almacen_id', FILTRO_ALMACEN_ID);
+    }
+    
+    if (FILTRO_CATEGORIA_ID) {
+        params.set('categoria_id', FILTRO_CATEGORIA_ID);
+    }
+    
+    // Preservar búsqueda si existe
+    const urlParams = new URLSearchParams(window.location.search);
+    const busqueda = urlParams.get('busqueda');
+    if (busqueda) {
+        params.set('busqueda', busqueda);
+    }
+    
+    const queryString = params.toString();
+    return window.location.pathname + (queryString ? '?' + queryString : '');
+}
 
 // Guardar contexto en sessionStorage para navegación
 function guardarContextoProductos() {
@@ -1037,6 +1061,13 @@ function verProducto(id) {
 
 function editarProducto(id) {
     editarProductoConContexto(id);
+}
+
+// Función para recargar con contexto preservado - ESTA ES LA FUNCIÓN CLAVE
+function recargarConContexto() {
+    const urlConContexto = construirUrlConContexto();
+    console.log('Recargando con contexto:', urlConContexto);
+    window.location.href = urlConContexto;
 }
 
 // Manejar navegación del navegador
