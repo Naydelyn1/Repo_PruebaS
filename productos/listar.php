@@ -846,7 +846,50 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
     </section>
 </main>
 
-
+<!-- Carrito de Entrega -->
+<div id="carritoEntrega" class="carrito-entrega">
+    <div class="carrito-header">
+        <div class="carrito-title">
+            <span class="carrito-title-long">
+                <i class="fas fa-hand-holding"></i>
+                Productos para Entrega
+            </span>
+            
+            <span class="carrito-title-short">
+                <i class="fas fa-shopping-cart"></i>
+                Entrega
+            </span>
+            
+            <span class="carrito-contador">0</span>
+        </div>
+    </div>
+    
+    <div class="carrito-lista" id="carritoLista">
+        <div class="carrito-vacio">
+            <i class="fas fa-hand-holding"></i>
+            <p>Selecciona productos para entregar</p>
+        </div>
+    </div>
+    
+    <div class="carrito-footer">
+        <div class="carrito-resumen">
+            <div class="carrito-total">
+                Total: <span id="totalUnidades">0</span> unidades
+            </div>
+        </div>
+        
+        <div class="carrito-acciones">
+            <button class="btn-carrito btn-limpiar" onclick="limpiarCarrito()">
+                <i class="fas fa-trash"></i>
+                Limpiar
+            </button>
+            <button class="btn-carrito btn-proceder" onclick="procederEntrega()" disabled>
+                <i class="fas fa-user"></i>
+                Proceder
+            </button>
+        </div>
+    </div>
+</div>
 
 <!-- Modal de Entrega -->
 <div id="modalEntrega" class="modal-entrega">
