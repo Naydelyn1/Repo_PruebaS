@@ -1,6 +1,827 @@
-/* ============================================
+// ✅ FUNCIÓN CORREGIDA PARA ENVIAR ENTREGA - PRESERVA CONTEXTO
+async function confirmarEntrega() {
+    const nombre = document.getElementById('nombreDestinatario').value.trim();
+    const dni = document.getElementById('dniDestinatario').value.trim();
+    
+    if (!nombre || !dni || dni.length !== 8) {
+        mostrarNotificacion('Por favor, complete todos los campos correctamente.', 'error');
+        return;
+    }
+    
+    // ✅ PREPARAR DATOS PARA ENVÍO USANDO EL NUEVO FORMATO
+    const datosEntrega = {
+        tipo_operacion: 'entrega_personal',
+        destinatario_nombre: nombre,
+        destinatario_dni: dni,
+        productos: carritoEntrega.map(item => ({
+            id: item.id,
+            cantidad: item.cantidad
+        }))
+    };
+    
+    // Mostrar indicador de carga
+    const btnConfirmar = document.querySelector('.btn-confirm');
+    const textoOriginal = btnConfirmar.innerHTML;
+    btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+    btnConfirmar.disabled = true;
+    
+    try {
+        // ✅ LLAMADA CORREGIDA AL SERVIDOR USANDO EL ENDPOINT CORRECTO
+        const response = await fetch('procesar_formulario.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(datosEntrega)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('📥 Respuesta del servidor:', data);
+
+        if (data.success) {
+            mostrarNotificacion('¡Entrega registrada exitosamente!', 'success');
+            
+            // Cerrar modal y limpiar
+            cerrarModalEntrega();
+            desactivarModoSeleccion(); // Salir del modo selección completamente
+            
+            // ✅ CLAVE: RECARGAR CON CONTEXTO PRESERVADO
+            setTimeout(() => {
+                recargarConContexto(); // Usar nuestra función que preserva el contexto
+            }, 2000);
+            
+        } else {
+            mostrarNotificacion(data.message || 'Error al registrar la entrega', 'error');
+            
+            // Restaurar botón
+            btnConfirmar.innerHTML = textoOriginal;
+            btnConfirmar.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('Error de conexión al registrar la entrega', 'error');
+        
+        // Restaurar botón
+        btnConfirmar.innerHTML = textoOriginal;
+        btnConfirmar.disabled = false;
+    }
+}
+
+// ===== MODAL DE TRANSFERENCIA =====
+function abrirModalEnvio(button) {
+    const modal = document.getElementById('modalTransferencia');
+    const productoId = button.dataset.id;
+    const productoNombre = button.dataset.nombre;
+    const almacenOrigen = button.dataset.almacen;
+    const stockDisponible = button.dataset.cantidad;
+    
+    // Llenar datos del modal
+    document.getElementById('producto_id').value = productoId;
+    document.getElementById('almacen_origen').value = almacenOrigen;
+    document.getElementById('producto_nombre').textContent = productoNombre;
+    document.getElementById('stock_disponible').textContent = stockDisponible;
+    document.getElementById('cantidad').max = stockDisponible;
+    document.getElementById('cantidad').value = 1;
+    
+    modal.classList.add('show');
+    modal.style.display = 'flex';
+}
+
+function cerrarModal() {
+    const modal = document.getElementById('modalTransferencia');
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 300);
+}
+
+function adjustQuantity(change) {
+    const cantidadInput = document.getElementById('cantidad');
+    const currentValue = parseInt(cantidadInput.value) || 1;
+    const maxValue = parseInt(cantidadInput.max);
+    const newValue = currentValue + change;
+    
+    if (newValue >= 1 && newValue <= maxValue) {
+        cantidadInput.value = newValue;
+    }
+}
+
+// ===== MANEJO DE STOCK CORREGIDO =====
+async function manejarCambioStock(button) {
+    const productoId = button.dataset.id;
+    const accion = button.dataset.accion;
+    const stockElement = document.getElementById(`cantidad-${productoId}`);
+    
+    if (!stockElement) {
+        console.error('No se encontró el elemento de stock para el producto:', productoId);
+        mostrarNotificacion('Error: No se encontró el elemento de stock', 'error');
+        return;
+    }
+    
+    const currentStock = parseInt(stockElement.textContent.replace(/,/g, ''));
+    
+    // Validaciones previas
+    if (accion === 'restar' && currentStock <= 0) {
+        mostrarNotificacion('No se puede reducir más el stock. Ya está en 0.', 'warning');
+        return;
+    }
+    
+    // Deshabilitar botón y mostrar loading
+    button.disabled = true;
+    const originalHtml = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    console.log(`🔄 Actualizando stock del producto ${productoId}: ${accion}`);
+    
+    try {
+        // ⭐ LLAMADA REAL AL SERVIDOR
+        const formData = new FormData();
+        formData.append('producto_id', productoId);
+        formData.append('accion', accion);
+        
+        console.log('📤 Enviando petición al servidor...');
+        
+        const response = await fetch('actualizar_cantidad.php', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        console.log('📥 Respuesta del servidor:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('📊 Datos recibidos:', data);
+        
+        if (data.success) {
+            // ✅ ACTUALIZACIÓN EXITOSA
+            const nuevaCantidad = parseInt(data.nueva_cantidad);
+            
+            // Actualizar el stock visualmente
+            stockElement.textContent = nuevaCantidad.toLocaleString();
+            
+            // Actualizar clases de stock (crítico, warning, bueno)
+            actualizarClaseStock(stockElement, nuevaCantidad);
+            
+            // Animación visual de éxito
+            stockElement.style.transform = 'scale(1.15)';
+            stockElement.style.color = '#28a745';
+            stockElement.style.fontWeight = 'bold';
+            
+            setTimeout(() => {
+                stockElement.style.transform = 'scale(1)';
+                stockElement.style.color = '';
+                stockElement.style.fontWeight = '';
+            }, 400);
+            
+            // Actualizar estado de botones
+            const allDecreaseButtons = document.querySelectorAll(`.stock-btn[data-id="${productoId}"][data-accion="restar"]`);
+            const allIncreaseButtons = document.querySelectorAll(`.stock-btn[data-id="${productoId}"][data-accion="sumar"]`);
+            
+            // Deshabilitar botón de restar si llegó a 0
+            allDecreaseButtons.forEach(btn => {
+                btn.disabled = nuevaCantidad <= 0;
+            });
+            
+            // Habilitar botón de sumar si estaba deshabilitado
+            allIncreaseButtons.forEach(btn => {
+                btn.disabled = false;
+            });
+            
+            // Actualizar botón de transferencia si existe
+            const transferButton = document.querySelector(`.btn-transfer[data-id="${productoId}"]`);
+            if (transferButton) {
+                if (nuevaCantidad > 0) {
+                    transferButton.disabled = false;
+                    transferButton.classList.remove('disabled');
+                    transferButton.dataset.cantidad = nuevaCantidad;
+                    transferButton.title = 'Transferir producto';
+                    transferButton.querySelector('i').className = 'fas fa-paper-plane';
+                } else {
+                    transferButton.disabled = true;
+                    transferButton.classList.add('disabled');
+                    transferButton.title = 'Sin stock disponible';
+                    transferButton.querySelector('i').className = 'fas fa-times';
+                }
+            }
+            
+            // Mostrar notificación de éxito
+            const accionTexto = accion === 'sumar' ? 'aumentado' : 'reducido';
+            mostrarNotificacion(
+                `✅ Stock ${accionTexto} correctamente. Nuevo stock: ${nuevaCantidad.toLocaleString()} unidades`, 
+                'exito',
+                3000
+            );
+            
+            console.log(`✅ Stock actualizado exitosamente: ${currentStock} → ${nuevaCantidad}`);
+            
+        } else {
+            // ❌ ERROR REPORTADO POR EL SERVIDOR
+            console.error('❌ Error del servidor:', data.message);
+            mostrarNotificacion(data.message || 'Error al actualizar el stock', 'error');
+        }
+        
+    } catch (error) {
+        // ❌ ERROR DE CONEXIÓN O PROCESAMIENTO
+        console.error('❌ Error en la petición:', error);
+        
+        let mensajeError = 'Error de conexión. No se pudo actualizar el stock.';
+        
+        if (error.message.includes('HTTP')) {
+            mensajeError = 'Error del servidor. Inténtelo más tarde.';
+        } else if (error.message.includes('JSON')) {
+            mensajeError = 'Error en la respuesta del servidor.';
+        } else if (error.message.includes('Network')) {
+            mensajeError = 'Error de red. Verifique su conexión.';
+        }
+        
+        mostrarNotificacion(mensajeError, 'error');
+        
+    } finally {
+        // Restaurar botón siempre
+        button.disabled = false;
+        button.innerHTML = originalHtml;
+        
+        console.log('🔄 Proceso de actualización finalizado');
+    }
+}
+
+// ===== FUNCIÓN AUXILIAR PARA ACTUALIZAR CLASES DE STOCK =====
+function actualizarClaseStock(element, cantidad) {
+    // Buscar el contenedor de valor de stock
+    const stockValue = element.closest('.stock-value') || element;
+    
+    // Remover todas las clases de estado
+    stockValue.classList.remove('stock-critical', 'stock-warning', 'stock-good', 'stock-empty');
+    
+    // Aplicar nueva clase según la cantidad
+    if (cantidad === 0) {
+        stockValue.classList.add('stock-empty');
+    } else if (cantidad < 5) {
+        stockValue.classList.add('stock-critical');
+    } else if (cantidad < 10) {
+        stockValue.classList.add('stock-warning');
+    } else {
+        stockValue.classList.add('stock-good');
+    }
+    
+    console.log(`🎨 Clase de stock actualizada: ${cantidad} unidades`);
+}
+
+// ===== CONFIGURACIÓN DE CONTROLES DE STOCK MEJORADA =====
+function configurarControlesStock() {
+    const stockButtons = document.querySelectorAll('.stock-btn');
+    console.log('🔧 Configurando controles de stock:', stockButtons.length, 'botones encontrados');
+    
+    if (stockButtons.length === 0) {
+        console.warn('⚠️ No se encontraron botones de stock en la página');
+        return;
+    }
+    
+    stockButtons.forEach((button, index) => {
+        const productId = button.dataset.id;
+        const accion = button.dataset.accion;
+        
+        console.log(`🔘 Configurando botón ${index + 1}: Producto ${productId}, Acción: ${accion}`);
+        
+        // Remover listeners anteriores para evitar duplicados
+        button.removeEventListener('click', handleStockClick);
+        
+        // Agregar nuevo listener
+        button.addEventListener('click', handleStockClick);
+    });
+    
+    console.log('✅ Controles de stock configurados correctamente');
+}
+
+// Función manejadora separada para mejor control
+async function handleStockClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const button = e.currentTarget;
+    const productId = button.dataset.id;
+    const accion = button.dataset.accion;
+    
+    console.log(`🖱️ Click en botón de stock: Producto ${productId}, Acción: ${accion}`);
+    
+    if (productId && accion) {
+        await manejarCambioStock(button);
+    } else {
+        console.error('❌ Datos de botón incompletos:', { productId, accion });
+        mostrarNotificacion('Error: Datos del botón incompletos', 'error');
+    }
+}
+
+// ===== FUNCIONES AUXILIARES =====
+function verProducto(id) {
+    window.location.href = `ver-producto.php?id=${id}`;
+}
+
+function editarProducto(id) {
+    window.location.href = `editar.php?id=${id}`;
+}
+
+function eliminarProducto(id, nombre) {
+    if (confirm(`¿Estás seguro de que deseas eliminar el producto "${nombre}"?`)) {
+        mostrarNotificacion('Función eliminar producto en desarrollo.', 'info');
+        console.log('Eliminar producto ID:', id);
+    }
+}
+
+function manejarCerrarSesion(event) {
+    event.preventDefault();
+    
+    if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+        mostrarNotificacion('Cerrando sesión...', 'info');
+        setTimeout(() => {
+            window.location.href = '../logout.php';
+        }, 1000);
+    }
+}
+
+function mostrarIndicadorCarga() {
+    const indicator = document.getElementById('loading-indicator');
+    if (indicator) {
+        indicator.style.display = 'flex';
+    }
+}
+
+
+// ===== FUNCIÓN MEJORADA PARA ACTUALIZAR CARRITO =====
+function actualizarCarrito() {
+    const carritoLista = document.getElementById('carritoLista');
+    const carritoContador = document.querySelector('.carrito-contador');
+    const totalUnidades = document.getElementById('totalUnidades');
+    const btnProceder = document.querySelector('.btn-proceder');
+    const indicadorCount = document.querySelector('.indicator-count');
+    
+    // Guardar valor anterior para animación
+    const valorAnterior = parseInt(carritoContador.textContent) || 0;
+    const valorNuevo = carritoEntrega.length;
+
+function precargarPaginaSiguiente() {
+    const currentPage = parseInt(document.body.dataset.page);
+    const totalPages = parseInt(document.body.dataset.totalPages);
+    
+    if (currentPage < totalPages) {
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        // Aquí construirías la URL de la siguiente página
+        document.head.appendChild(link);
+    }
+}
+
+function configurarTooltips() {
+    // Configuración básica de tooltips si es necesaria
+    document.querySelectorAll('[title]').forEach(element => {
+        element.addEventListener('mouseenter', function(e) {
+            // Lógica para mostrar tooltip personalizado si se desea
+        });
+    });
+}
+
+function inicializarEfectosVisuales() {
+    // Efectos de entrada para las filas de la tabla
+    const rows = document.querySelectorAll('.product-row');
+    
+    rows.forEach((row, index) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            row.style.transition = 'all 0.3s ease';
+            row.style.opacity = '1';
+            row.style.transform = 'translateY(0)';
+        }, index * 50);
+    });
+}
+
+function configurarTeclasRapidas() {
+    document.addEventListener('keydown', function(e) {
+        // Solo actuar si no estamos en un input
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+            return;
+        }
+        
+        switch(e.key) {
+            case 'Escape':
+                // Cerrar modales o salir del modo selección
+                if (modoSeleccion) {
+                    toggleModoSeleccion();
+                } else {
+                    cerrarModal();
+                    cerrarModalEntrega();
+                }
+                break;
+                
+            case 'e':
+            case 'E':
+                if (!modoSeleccion) {
+                    toggleModoSeleccion();
+                }
+                break;
+                
+            case 'm':
+            case 'M':
+                if (modoSeleccion && carritoEntrega.length > 0) {
+                    toggleCarrito();
+                }
+                break;
+        }
+        
+        if (e.ctrlKey || e.metaKey) {
+            switch(e.key) {
+                case 'f':
+                case 'F':
+                    e.preventDefault();
+                    const searchInput = document.querySelector('input[name="busqueda"]');
+                    if (searchInput) {
+                        searchInput.focus();
+                        searchInput.select();
+                    }
+                    break;
+            }
+        }
+    });
+}
+
+// ===== FUNCIÓN PARA AJUSTAR POSICIÓN SEGÚN CARRITO =====
+function ajustarPosicionNotificaciones() {
+    const container = document.getElementById('notificaciones-container');
+    if (!container) return;
+    
+    const carritoElement = document.getElementById('carritoEntrega');
+    const carritoVisible = carritoElement && carritoElement.classList.contains('show');
+    const carritoMinimizado = carritoElement && carritoElement.classList.contains('minimized');
+
+    
+    if (carritoVisible && !carritoMinimizado) {
+        // Si el carrito está visible y no minimizado, mover notificaciones más a la izquierda
+        const carritoWidth = window.innerWidth <= 768 ? 280 : 340; // Ancho responsivo del carrito
+        container.style.right = `${carritoWidth + 20}px`;
+        console.log('📍 Notificaciones reposicionadas para evitar carrito');
+    } else {
+        // Posición normal
+        container.style.right = '20px';
+    }
+    
+    // Ajustar según tamaño de pantalla
+    if (window.innerWidth <= 480) {
+        container.style.right = '10px';
+        container.style.left = '10px';
+        container.style.maxWidth = 'calc(100% - 20px)';
+    } else {
+        container.style.left = 'auto';
+        container.style.maxWidth = '380px';
+    }
+}
+
+// ===== SISTEMA DE NOTIFICACIONES MEJORADO - ARRIBA DERECHA =====
+function mostrarNotificacion(mensaje, tipo = 'info', duracion = 4000) {
+    let container = document.getElementById('notificaciones-container');
+    
+    // Crear container si no existe
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'notificaciones-container';
+        container.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 99999;
+            max-width: 380px;
+            pointer-events: none;
+        `;
+        document.body.appendChild(container);
+        console.log('📍 Container de notificaciones creado arriba-derecha');
+    }
+    
+    // Ajustar posición para no solaparse con carrito (solo si está visible)
+    ajustarPosicionNotificaciones();
+    
+    const iconos = {
+        success: 'fa-check-circle',
+        exito: 'fa-check-circle',
+        error: 'fa-exclamation-circle',
+        warning: 'fa-exclamation-triangle',
+        info: 'fa-info-circle'
+    };
+    
+    const colores = {
+        success: '#28a745',
+        exito: '#28a745',
+        error: '#dc3545',
+        warning: '#ffc107', 
+        info: '#0a253c'
+    };
+    
+    const notificacion = document.createElement('div');
+    notificacion.className = `notificacion notificacion-${tipo}`;
+    
+    notificacion.innerHTML = `
+        <div class="notificacion-icon">
+            <i class="fas ${iconos[tipo]}"></i>
+        </div>
+        <div class="notificacion-content">
+            <span class="notificacion-text">${mensaje}</span>
+        </div>
+        <button class="notificacion-close" onclick="this.parentElement.remove()" aria-label="Cerrar notificación">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    // Estilos mejorados para notificaciones arriba-derecha
+    notificacion.style.cssText = `
+        background: white;
+        padding: 16px 20px;
+        margin-bottom: 12px;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+        border-left: 5px solid ${colores[tipo] || colores.info};
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 300px;
+        max-width: 380px;
+        position: relative;
+        transform: translateX(400px);
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: all;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    `;
+    
+    // Agregar al container
+    container.appendChild(notificacion);
+    
+    // Animar entrada
+    setTimeout(() => {
+        notificacion.style.transform = 'translateX(0)';
+        notificacion.style.opacity = '1';
+    }, 50);
+    
+    // Configurar botón de cerrar
+    const cerrarBtn = notificacion.querySelector('.notificacion-close');
+    cerrarBtn.style.cssText = `
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 4px;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+    `;
+    
+    cerrarBtn.addEventListener('mouseenter', () => {
+        cerrarBtn.style.background = 'rgba(0, 0, 0, 0.1)';
+        cerrarBtn.style.color = '#333';
+    });
+    
+    cerrarBtn.addEventListener('mouseleave', () => {
+        cerrarBtn.style.background = 'none';
+        cerrarBtn.style.color = '#666';
+    });
+    
+    cerrarBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removerNotificacion(notificacion);
+    });
+    
+    // Estilizar icono
+    const iconElement = notificacion.querySelector('.notificacion-icon i');
+    iconElement.style.cssText = `
+        font-size: 20px;
+        color: ${colores[tipo] || colores.info};
+        flex-shrink: 0;
+    `;
+    
+    // Estilizar contenido
+    const contentElement = notificacion.querySelector('.notificacion-content');
+    contentElement.style.cssText = `
+        flex: 1;
+        min-width: 0;
+    `;
+    
+    const textElement = notificacion.querySelector('.notificacion-text');
+    textElement.style.cssText = `
+        color: #2c3e50;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.4;
+        word-wrap: break-word;
+        margin: 0;
+    `;
+    
+    // Auto-remover después de la duración especificada
+    if (duracion > 0) {
+        setTimeout(() => {
+            removerNotificacion(notificacion);
+        }, duracion);
+    }
+    
+    // Limpiar notificaciones antiguas
+    limpiarNotificacionesAntiguas();
+    
+    console.log(`📬 Notificación ${tipo} mostrada: ${mensaje.substring(0, 50)}...`);
+}
+
+// ===== FUNCIÓN PARA REMOVER NOTIFICACIONES CON ANIMACIÓN =====
+function removerNotificacion(notificacion) {
+    if (!notificacion || !notificacion.parentElement) return;
+    
+    // Animar salida
+    notificacion.style.transform = 'translateX(400px)';
+    notificacion.style.opacity = '0';
+    
+    setTimeout(() => {
+        if (notificacion.parentElement) {
+            notificacion.remove();
+        }
+    }, 400);
+}
+
+// ===== FUNCIÓN PARA LIMPIAR NOTIFICACIONES ANTIGUAS =====
+function limpiarNotificacionesAntiguas() {
+    const container = document.getElementById('notificaciones-container');
+    if (!container) return;
+    
+    const notificaciones = container.querySelectorAll('.notificacion');
+    if (notificaciones.length > 5) { // Máximo 5 notificaciones visible
+        // Remover las más antiguas
+        for (let i = 0; i < notificaciones.length - 5; i++) {
+            removerNotificacion(notificaciones[i]);
+        }
+    }
+}
+
+// ===== ESTILOS CSS MEJORADOS PARA NOTIFICACIONES =====
+const estilosNotificacionesMejorados = `
+    /* Animaciones para notificaciones */
+    @keyframes slideInFromRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOutToRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Contenedor de notificaciones */
+    #notificaciones-container {
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    /* Efectos hover para notificaciones */
+    .notificacion {
+        cursor: default;
+        user-select: none;
+    }
+    
+    .notificacion:hover {
+        transform: translateX(0) scale(1.02) !important;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.16), 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+    }
+    
+    /* Responsive para móviles */
+    @media (max-width: 480px) {
+        .notificacion {
+            min-width: auto !important;
+            width: 100% !important;
+            font-size: 13px !important;
+        }
+        
+        .notificacion-text {
+            font-size: 13px !important;
+        }
+        
+        .notificacion-icon i {
+            font-size: 18px !important;
+        }
+    }
+    
+    /* Ajustes para diferentes tipos */
+    .notificacion-exito .notificacion-icon i,
+    .notificacion-success .notificacion-icon i {
+        color: #28a745 !important;
+    }
+    
+    .notificacion-error .notificacion-icon i {
+        color: #dc3545 !important;
+    }
+    
+    .notificacion-warning .notificacion-icon i {
+        color: #ffc107 !important;
+    }
+    
+    .notificacion-info .notificacion-icon i {
+        color: #0a253c !important;
+    }
+`;
+
+// Inyectar estilos mejorados
+if (!document.getElementById('notificaciones-mejoradas-styles')) {
+    const styleSheet = document.createElement('style');
+    styleSheet.id = 'notificaciones-mejoradas-styles';
+    styleSheet.textContent = estilosNotificacionesMejorados;
+    document.head.appendChild(styleSheet);
+}
+
+// ===== ESCUCHAR CAMBIOS DE TAMAÑO PARA REPOSICIONAR =====
+window.addEventListener('resize', () => {
+    setTimeout(ajustarPosicionNotificaciones, 100);
+});
+
+// ===== FUNCIÓN DE UTILIDAD PARA MOSTRAR NOTIFICACIONES ESPECÍFICAS =====
+window.notificarExito = function(mensaje, duracion = 4000) {
+    mostrarNotificacion(mensaje, 'exito', duracion);
+};
+
+window.notificarError = function(mensaje, duracion = 6000) {
+    mostrarNotificacion(mensaje, 'error', duracion);
+};
+
+window.notificarInfo = function(mensaje, duracion = 4000) {
+    mostrarNotificacion(mensaje, 'info', duracion);
+};
+
+window.notificarWarning = function(mensaje, duracion = 5000) {
+    mostrarNotificacion(mensaje, 'warning', duracion);
+};
+
+// ===== FUNCIÓN DE DEBUG PARA TESTEAR =====
+window.debugStock = function(productoId) {
+    console.log('🔍 Debug de stock para producto:', productoId);
+    
+    const stockElement = document.getElementById(`cantidad-${productoId}`);
+    const buttons = document.querySelectorAll(`.stock-btn[data-id="${productoId}"]`);
+    
+    console.log('Stock element:', stockElement);
+    console.log('Stock buttons:', buttons);
+    console.log('Cantidad actual:', stockElement ? stockElement.textContent : 'No encontrado');
+    
+    return {
+        element: stockElement,
+        buttons: Array.from(buttons),
+        currentStock: stockElement ? parseInt(stockElement.textContent.replace(/,/g, '')) : null
+    };
+};
+
+// ===== FUNCIONES EXPUESTAS GLOBALMENTE =====
+window.toggleModoSeleccion = toggleModoSeleccion;
+window.limpiarCarrito = limpiarCarrito;
+window.procederEntrega = procederEntrega;
+window.cerrarModalEntrega = cerrarModalEntrega;
+window.confirmarEntrega = confirmarEntrega;
+window.abrirModalEnvio = abrirModalEnvio;
+window.cerrarModal = cerrarModal;
+window.adjustQuantity = adjustQuantity;
+window.verProducto = verProducto;
+window.edit/* ============================================
    PRODUCTOS LISTAR - JAVASCRIPT COMPLETO MEJORADO
    Con carrito persistente, esquina derecha y UX optimizada
+   *** VERSIÓN CORREGIDA PARA PRESERVAR CONTEXTO ***
    ============================================ */
 
 // ===== VARIABLES GLOBALES =====
@@ -13,8 +834,19 @@ let carritoMinimizado = false;
 const CARRITO_STORAGE_KEY = 'productos_entrega_carrito';
 const MODO_STORAGE_KEY = 'productos_entrega_modo';
 
+// ✅ NUEVAS VARIABLES PARA PRESERVAR CONTEXTO
+let CONTEXTO_ACTUAL = {
+    almacen_id: null,
+    categoria_id: null,
+    busqueda: '',
+    pagina: 1
+};
+
 // ===== INICIALIZACIÓN =====
 document.addEventListener('DOMContentLoaded', function() {
+    // ✅ OBTENER CONTEXTO ACTUAL ANTES DE CUALQUIER COSA
+    obtenerContextoActual();
+    
     inicializarComponentes();
     configurarEventListeners();
     inicializarSidebar();
@@ -35,6 +867,51 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 100);
 });
 
+// ✅ NUEVA FUNCIÓN PARA OBTENER CONTEXTO ACTUAL
+function obtenerContextoActual() {
+    // Obtener contexto del body
+    const body = document.body;
+    CONTEXTO_ACTUAL.almacen_id = body.dataset.almacenId && body.dataset.almacenId !== 'null' ? body.dataset.almacenId : null;
+    CONTEXTO_ACTUAL.categoria_id = body.dataset.categoriaId && body.dataset.categoriaId !== 'null' ? body.dataset.categoriaId : null;
+    
+    // Obtener parámetros de la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    CONTEXTO_ACTUAL.busqueda = urlParams.get('busqueda') || '';
+    CONTEXTO_ACTUAL.pagina = parseInt(urlParams.get('pagina')) || 1;
+    
+    console.log('📍 Contexto actual obtenido:', CONTEXTO_ACTUAL);
+}
+
+// ✅ NUEVA FUNCIÓN PARA CONSTRUIR URL CON CONTEXTO
+function construirUrlConContexto() {
+    const params = new URLSearchParams();
+    
+    if (CONTEXTO_ACTUAL.almacen_id) {
+        params.set('almacen_id', CONTEXTO_ACTUAL.almacen_id);
+    }
+    
+    if (CONTEXTO_ACTUAL.categoria_id) {
+        params.set('categoria_id', CONTEXTO_ACTUAL.categoria_id);
+    }
+    
+    if (CONTEXTO_ACTUAL.busqueda) {
+        params.set('busqueda', CONTEXTO_ACTUAL.busqueda);
+    }
+    
+    const queryString = params.toString();
+    const urlConContexto = window.location.pathname + (queryString ? '?' + queryString : '');
+    
+    console.log('🔗 URL construida con contexto:', urlConContexto);
+    return urlConContexto;
+}
+
+// ✅ NUEVA FUNCIÓN PARA RECARGAR CON CONTEXTO
+function recargarConContexto() {
+    const urlConContexto = construirUrlConContexto();
+    console.log('🔄 Recargando página con contexto preservado:', urlConContexto);
+    window.location.href = urlConContexto;
+}
+
 // ===== PERSISTENCIA DEL CARRITO =====
 function guardarCarritoEnStorage() {
     try {
@@ -43,10 +920,11 @@ function guardarCarritoEnStorage() {
             seleccionados: Array.from(productosSeleccionados),
             modoActivo: modoSeleccion,
             timestamp: Date.now(),
-            url: window.location.href
+            url: window.location.href,
+            contexto: CONTEXTO_ACTUAL // ✅ GUARDAR CONTEXTO TAMBIÉN
         };
         localStorage.setItem(CARRITO_STORAGE_KEY, JSON.stringify(carritoData));
-        console.log('💾 Carrito guardado en localStorage');
+        console.log('💾 Carrito guardado en localStorage con contexto');
     } catch (error) {
         console.error('Error al guardar carrito:', error);
     }
@@ -69,6 +947,19 @@ function restaurarCarritoGuardado() {
         // Verificar que estemos en la misma sección (productos)
         if (!carritoData.url || !carritoData.url.includes('/productos/')) {
             return;
+        }
+        
+        // ✅ VERIFICAR QUE EL CONTEXTO COINCIDA
+        if (carritoData.contexto) {
+            const contextoCoincide = 
+                carritoData.contexto.almacen_id === CONTEXTO_ACTUAL.almacen_id &&
+                carritoData.contexto.categoria_id === CONTEXTO_ACTUAL.categoria_id;
+            
+            if (!contextoCoincide) {
+                console.log('🔄 Contexto diferente, limpiando carrito guardado');
+                localStorage.removeItem(CARRITO_STORAGE_KEY);
+                return;
+            }
         }
         
         // Restaurar datos
@@ -720,810 +1611,3 @@ function validarDNI(e) {
     input.value = value;
     validarFormularioEntrega();
 }
-
-// ===== FUNCIÓN MEJORADA PARA ENVIAR ENTREGA =====
-async function confirmarEntrega() {
-    const nombre = document.getElementById('nombreDestinatario').value.trim();
-    const dni = document.getElementById('dniDestinatario').value.trim();
-    
-    if (!nombre || !dni || dni.length !== 8) {
-        mostrarNotificacion('Por favor, complete todos los campos correctamente.', 'error');
-        return;
-    }
-    
-    // Preparar datos para envío
-    const datosEntrega = {
-        nombre_destinatario: nombre,
-        dni_destinatario: dni,
-        productos: JSON.stringify(carritoEntrega)
-    };
-    
-    // Mostrar indicador de carga
-    const btnConfirmar = document.querySelector('.btn-confirm');
-    const textoOriginal = btnConfirmar.innerHTML;
-    btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
-    btnConfirmar.disabled = true;
-    
-    try {
-        // LLAMADA REAL AL SERVIDOR
-        const response = await fetch('../entregas/Procesar_entrega.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams(datosEntrega)
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            mostrarNotificacion('¡Entrega registrada exitosamente!', 'success');
-            
-            // Cerrar modal y limpiar
-            cerrarModalEntrega();
-            desactivarModoSeleccion(); // Salir del modo selección completamente
-            
-            // Recargar página para actualizar stock
-            setTimeout(() => {
-                window.location.reload();
-            }, 2000);
-        } else {
-            mostrarNotificacion(data.message || 'Error al registrar la entrega', 'error');
-            
-            // Restaurar botón
-            btnConfirmar.innerHTML = textoOriginal;
-            btnConfirmar.disabled = false;
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        mostrarNotificacion('Error de conexión al registrar la entrega', 'error');
-        
-        // Restaurar botón
-        btnConfirmar.innerHTML = textoOriginal;
-        btnConfirmar.disabled = false;
-    }
-}
-
-// ===== MODAL DE TRANSFERENCIA =====
-function abrirModalEnvio(button) {
-    const modal = document.getElementById('modalTransferencia');
-    const productoId = button.dataset.id;
-    const productoNombre = button.dataset.nombre;
-    const almacenOrigen = button.dataset.almacen;
-    const stockDisponible = button.dataset.cantidad;
-    
-    // Llenar datos del modal
-    document.getElementById('producto_id').value = productoId;
-    document.getElementById('almacen_origen').value = almacenOrigen;
-    document.getElementById('producto_nombre').textContent = productoNombre;
-    document.getElementById('stock_disponible').textContent = stockDisponible;
-    document.getElementById('cantidad').max = stockDisponible;
-    document.getElementById('cantidad').value = 1;
-    
-    modal.classList.add('show');
-    modal.style.display = 'flex';
-}
-
-function cerrarModal() {
-    const modal = document.getElementById('modalTransferencia');
-    modal.classList.remove('show');
-    setTimeout(() => {
-        modal.style.display = 'none';
-    }, 300);
-}
-
-function adjustQuantity(change) {
-    const cantidadInput = document.getElementById('cantidad');
-    const currentValue = parseInt(cantidadInput.value) || 1;
-    const maxValue = parseInt(cantidadInput.max);
-    const newValue = currentValue + change;
-    
-    if (newValue >= 1 && newValue <= maxValue) {
-        cantidadInput.value = newValue;
-    }
-}
-
-// ===== MANEJO DE STOCK CORREGIDO =====
-async function manejarCambioStock(button) {
-    const productoId = button.dataset.id;
-    const accion = button.dataset.accion;
-    const stockElement = document.getElementById(`cantidad-${productoId}`);
-    
-    if (!stockElement) {
-        console.error('No se encontró el elemento de stock para el producto:', productoId);
-        mostrarNotificacion('Error: No se encontró el elemento de stock', 'error');
-        return;
-    }
-    
-    const currentStock = parseInt(stockElement.textContent.replace(/,/g, ''));
-    
-    // Validaciones previas
-    if (accion === 'restar' && currentStock <= 0) {
-        mostrarNotificacion('No se puede reducir más el stock. Ya está en 0.', 'warning');
-        return;
-    }
-    
-    // Deshabilitar botón y mostrar loading
-    button.disabled = true;
-    const originalHtml = button.innerHTML;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-    
-    console.log(`🔄 Actualizando stock del producto ${productoId}: ${accion}`);
-    
-    try {
-        // ⭐ LLAMADA REAL AL SERVIDOR
-        const formData = new FormData();
-        formData.append('producto_id', productoId);
-        formData.append('accion', accion);
-        
-        console.log('📤 Enviando petición al servidor...');
-        
-        const response = await fetch('actualizar_cantidad.php', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
-        
-        console.log('📥 Respuesta del servidor:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log('📊 Datos recibidos:', data);
-        
-        if (data.success) {
-            // ✅ ACTUALIZACIÓN EXITOSA
-            const nuevaCantidad = parseInt(data.nueva_cantidad);
-            
-            // Actualizar el stock visualmente
-            stockElement.textContent = nuevaCantidad.toLocaleString();
-            
-            // Actualizar clases de stock (crítico, warning, bueno)
-            actualizarClaseStock(stockElement, nuevaCantidad);
-            
-            // Animación visual de éxito
-            stockElement.style.transform = 'scale(1.15)';
-            stockElement.style.color = '#28a745';
-            stockElement.style.fontWeight = 'bold';
-            
-            setTimeout(() => {
-                stockElement.style.transform = 'scale(1)';
-                stockElement.style.color = '';
-                stockElement.style.fontWeight = '';
-            }, 400);
-            
-            // Actualizar estado de botones
-            const allDecreaseButtons = document.querySelectorAll(`.stock-btn[data-id="${productoId}"][data-accion="restar"]`);
-            const allIncreaseButtons = document.querySelectorAll(`.stock-btn[data-id="${productoId}"][data-accion="sumar"]`);
-            
-            // Deshabilitar botón de restar si llegó a 0
-            allDecreaseButtons.forEach(btn => {
-                btn.disabled = nuevaCantidad <= 0;
-            });
-            
-            // Habilitar botón de sumar si estaba deshabilitado
-            allIncreaseButtons.forEach(btn => {
-                btn.disabled = false;
-            });
-            
-            // Actualizar botón de transferencia si existe
-            const transferButton = document.querySelector(`.btn-transfer[data-id="${productoId}"]`);
-            if (transferButton) {
-                if (nuevaCantidad > 0) {
-                    transferButton.disabled = false;
-                    transferButton.classList.remove('disabled');
-                    transferButton.dataset.cantidad = nuevaCantidad;
-                    transferButton.title = 'Transferir producto';
-                    transferButton.querySelector('i').className = 'fas fa-paper-plane';
-                } else {
-                    transferButton.disabled = true;
-                    transferButton.classList.add('disabled');
-                    transferButton.title = 'Sin stock disponible';
-                    transferButton.querySelector('i').className = 'fas fa-times';
-                }
-            }
-            
-            // Mostrar notificación de éxito
-            const accionTexto = accion === 'sumar' ? 'aumentado' : 'reducido';
-            mostrarNotificacion(
-                `✅ Stock ${accionTexto} correctamente. Nuevo stock: ${nuevaCantidad.toLocaleString()} unidades`, 
-                'exito',
-                3000
-            );
-            
-            console.log(`✅ Stock actualizado exitosamente: ${currentStock} → ${nuevaCantidad}`);
-            
-        } else {
-            // ❌ ERROR REPORTADO POR EL SERVIDOR
-            console.error('❌ Error del servidor:', data.message);
-            mostrarNotificacion(data.message || 'Error al actualizar el stock', 'error');
-        }
-        
-    } catch (error) {
-        // ❌ ERROR DE CONEXIÓN O PROCESAMIENTO
-        console.error('❌ Error en la petición:', error);
-        
-        let mensajeError = 'Error de conexión. No se pudo actualizar el stock.';
-        
-        if (error.message.includes('HTTP')) {
-            mensajeError = 'Error del servidor. Inténtelo más tarde.';
-        } else if (error.message.includes('JSON')) {
-            mensajeError = 'Error en la respuesta del servidor.';
-        } else if (error.message.includes('Network')) {
-            mensajeError = 'Error de red. Verifique su conexión.';
-        }
-        
-        mostrarNotificacion(mensajeError, 'error');
-        
-    } finally {
-        // Restaurar botón siempre
-        button.disabled = false;
-        button.innerHTML = originalHtml;
-        
-        console.log('🔄 Proceso de actualización finalizado');
-    }
-}
-
-// ===== FUNCIÓN AUXILIAR PARA ACTUALIZAR CLASES DE STOCK =====
-function actualizarClaseStock(element, cantidad) {
-    // Buscar el contenedor de valor de stock
-    const stockValue = element.closest('.stock-value') || element;
-    
-    // Remover todas las clases de estado
-    stockValue.classList.remove('stock-critical', 'stock-warning', 'stock-good', 'stock-empty');
-    
-    // Aplicar nueva clase según la cantidad
-    if (cantidad === 0) {
-        stockValue.classList.add('stock-empty');
-    } else if (cantidad < 5) {
-        stockValue.classList.add('stock-critical');
-    } else if (cantidad < 10) {
-        stockValue.classList.add('stock-warning');
-    } else {
-        stockValue.classList.add('stock-good');
-    }
-    
-    console.log(`🎨 Clase de stock actualizada: ${cantidad} unidades`);
-}
-
-// ===== CONFIGURACIÓN DE CONTROLES DE STOCK MEJORADA =====
-function configurarControlesStock() {
-    const stockButtons = document.querySelectorAll('.stock-btn');
-    console.log('🔧 Configurando controles de stock:', stockButtons.length, 'botones encontrados');
-    
-    if (stockButtons.length === 0) {
-        console.warn('⚠️ No se encontraron botones de stock en la página');
-        return;
-    }
-    
-    stockButtons.forEach((button, index) => {
-        const productId = button.dataset.id;
-        const accion = button.dataset.accion;
-        
-        console.log(`🔘 Configurando botón ${index + 1}: Producto ${productId}, Acción: ${accion}`);
-        
-        // Remover listeners anteriores para evitar duplicados
-        button.removeEventListener('click', handleStockClick);
-        
-        // Agregar nuevo listener
-        button.addEventListener('click', handleStockClick);
-    });
-    
-    console.log('✅ Controles de stock configurados correctamente');
-}
-
-// Función manejadora separada para mejor control
-async function handleStockClick(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const button = e.currentTarget;
-    const productId = button.dataset.id;
-    const accion = button.dataset.accion;
-    
-    console.log(`🖱️ Click en botón de stock: Producto ${productId}, Acción: ${accion}`);
-    
-    if (productId && accion) {
-        await manejarCambioStock(button);
-    } else {
-        console.error('❌ Datos de botón incompletos:', { productId, accion });
-        mostrarNotificacion('Error: Datos del botón incompletos', 'error');
-    }
-}
-
-// ===== FUNCIONES AUXILIARES =====
-function verProducto(id) {
-    window.location.href = `ver-producto.php?id=${id}`;
-}
-
-function editarProducto(id) {
-    window.location.href = `editar.php?id=${id}`;
-}
-
-function eliminarProducto(id, nombre) {
-    if (confirm(`¿Estás seguro de que deseas eliminar el producto "${nombre}"?`)) {
-        mostrarNotificacion('Función eliminar producto en desarrollo.', 'info');
-        console.log('Eliminar producto ID:', id);
-    }
-}
-
-function manejarCerrarSesion(event) {
-    event.preventDefault();
-    
-    if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-        mostrarNotificacion('Cerrando sesión...', 'info');
-        setTimeout(() => {
-            window.location.href = '../logout.php';
-        }, 1000);
-    }
-}
-
-function mostrarIndicadorCarga() {
-    const indicator = document.getElementById('loading-indicator');
-    if (indicator) {
-        indicator.style.display = 'flex';
-    }
-}
-
-function precargarPaginaSiguiente() {
-    const currentPage = parseInt(document.body.dataset.page);
-    const totalPages = parseInt(document.body.dataset.totalPages);
-    
-    if (currentPage < totalPages) {
-        const link = document.createElement('link');
-        link.rel = 'prefetch';
-        // Aquí construirías la URL de la siguiente página
-        document.head.appendChild(link);
-    }
-}
-
-function configurarTooltips() {
-    // Configuración básica de tooltips si es necesaria
-    document.querySelectorAll('[title]').forEach(element => {
-        element.addEventListener('mouseenter', function(e) {
-            // Lógica para mostrar tooltip personalizado si se desea
-        });
-    });
-}
-
-function inicializarEfectosVisuales() {
-    // Efectos de entrada para las filas de la tabla
-    const rows = document.querySelectorAll('.product-row');
-    
-    rows.forEach((row, index) => {
-        row.style.opacity = '0';
-        row.style.transform = 'translateY(20px)';
-        
-        setTimeout(() => {
-            row.style.transition = 'all 0.3s ease';
-            row.style.opacity = '1';
-            row.style.transform = 'translateY(0)';
-        }, index * 50);
-    });
-}
-
-function configurarTeclasRapidas() {
-    document.addEventListener('keydown', function(e) {
-        // Solo actuar si no estamos en un input
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
-            return;
-        }
-        
-        switch(e.key) {
-            case 'Escape':
-                // Cerrar modales o salir del modo selección
-                if (modoSeleccion) {
-                    toggleModoSeleccion();
-                } else {
-                    cerrarModal();
-                    cerrarModalEntrega();
-                }
-                break;
-                
-            case 'e':
-            case 'E':
-                if (!modoSeleccion) {
-                    toggleModoSeleccion();
-                }
-                break;
-                
-            case 'm':
-            case 'M':
-                if (modoSeleccion && carritoEntrega.length > 0) {
-                    toggleCarrito();
-                }
-                break;
-        }
-        
-        if (e.ctrlKey || e.metaKey) {
-            switch(e.key) {
-                case 'f':
-                case 'F':
-                    e.preventDefault();
-                    const searchInput = document.querySelector('input[name="busqueda"]');
-                    if (searchInput) {
-                        searchInput.focus();
-                        searchInput.select();
-                    }
-                    break;
-            }
-        }
-    });
-}
-
-// ===== FUNCIÓN PARA AJUSTAR POSICIÓN SEGÚN CARRITO =====
-function ajustarPosicionNotificaciones() {
-    const container = document.getElementById('notificaciones-container');
-    if (!container) return;
-    
-    const carritoElement = document.getElementById('carritoEntrega');
-    const carritoVisible = carritoElement && carritoElement.classList.contains('show');
-    const carritoMinimizado = carritoElement && carritoElement.classList.contains('minimized');
-    
-    if (carritoVisible && !carritoMinimizado) {
-        // Si el carrito está visible y no minimizado, mover notificaciones más a la izquierda
-        const carritoWidth = window.innerWidth <= 768 ? 280 : 340; // Ancho responsivo del carrito
-        container.style.right = `${carritoWidth + 20}px`;
-        console.log('📍 Notificaciones reposicionadas para evitar carrito');
-    } else {
-        // Posición normal
-        container.style.right = '20px';
-    }
-    
-    // Ajustar según tamaño de pantalla
-    if (window.innerWidth <= 480) {
-        container.style.right = '10px';
-        container.style.left = '10px';
-        container.style.maxWidth = 'calc(100% - 20px)';
-    } else {
-        container.style.left = 'auto';
-        container.style.maxWidth = '380px';
-    }
-}
-
-// ===== SISTEMA DE NOTIFICACIONES MEJORADO - ARRIBA DERECHA =====
-function mostrarNotificacion(mensaje, tipo = 'info', duracion = 4000) {
-    let container = document.getElementById('notificaciones-container');
-    
-    // Crear container si no existe
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'notificaciones-container';
-        container.style.cssText = `
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            z-index: 99999;
-            max-width: 380px;
-            pointer-events: none;
-        `;
-        document.body.appendChild(container);
-        console.log('📍 Container de notificaciones creado arriba-derecha');
-    }
-    
-    // Ajustar posición para no solaparse con carrito (solo si está visible)
-    ajustarPosicionNotificaciones();
-    
-    const iconos = {
-        success: 'fa-check-circle',
-        exito: 'fa-check-circle',
-        error: 'fa-exclamation-circle',
-        warning: 'fa-exclamation-triangle',
-        info: 'fa-info-circle'
-    };
-    
-    const colores = {
-        success: '#28a745',
-        exito: '#28a745',
-        error: '#dc3545',
-        warning: '#ffc107', 
-        info: '#0a253c'
-    };
-    
-    const notificacion = document.createElement('div');
-    notificacion.className = `notificacion notificacion-${tipo}`;
-    
-    notificacion.innerHTML = `
-        <div class="notificacion-icon">
-            <i class="fas ${iconos[tipo]}"></i>
-        </div>
-        <div class="notificacion-content">
-            <span class="notificacion-text">${mensaje}</span>
-        </div>
-        <button class="notificacion-close" onclick="this.parentElement.remove()" aria-label="Cerrar notificación">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-    
-    // Estilos mejorados para notificaciones arriba-derecha
-    notificacion.style.cssText = `
-        background: white;
-        padding: 16px 20px;
-        margin-bottom: 12px;
-        border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
-        border-left: 5px solid ${colores[tipo] || colores.info};
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        min-width: 300px;
-        max-width: 380px;
-        position: relative;
-        transform: translateX(400px);
-        opacity: 0;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        pointer-events: all;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    `;
-    
-    // Agregar al container
-    container.appendChild(notificacion);
-    
-    // Animar entrada
-    setTimeout(() => {
-        notificacion.style.transform = 'translateX(0)';
-        notificacion.style.opacity = '1';
-    }, 50);
-    
-    // Configurar botón de cerrar
-    const cerrarBtn = notificacion.querySelector('.notificacion-close');
-    cerrarBtn.style.cssText = `
-        background: none;
-        border: none;
-        color: #666;
-        cursor: pointer;
-        font-size: 14px;
-        padding: 4px;
-        border-radius: 50%;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 24px;
-        height: 24px;
-    `;
-    
-    cerrarBtn.addEventListener('mouseenter', () => {
-        cerrarBtn.style.background = 'rgba(0, 0, 0, 0.1)';
-        cerrarBtn.style.color = '#333';
-    });
-    
-    cerrarBtn.addEventListener('mouseleave', () => {
-        cerrarBtn.style.background = 'none';
-        cerrarBtn.style.color = '#666';
-    });
-    
-    cerrarBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        removerNotificacion(notificacion);
-    });
-    
-    // Estilizar icono
-    const iconElement = notificacion.querySelector('.notificacion-icon i');
-    iconElement.style.cssText = `
-        font-size: 20px;
-        color: ${colores[tipo] || colores.info};
-        flex-shrink: 0;
-    `;
-    
-    // Estilizar contenido
-    const contentElement = notificacion.querySelector('.notificacion-content');
-    contentElement.style.cssText = `
-        flex: 1;
-        min-width: 0;
-    `;
-    
-    const textElement = notificacion.querySelector('.notificacion-text');
-    textElement.style.cssText = `
-        color: #2c3e50;
-        font-size: 14px;
-        font-weight: 500;
-        line-height: 1.4;
-        word-wrap: break-word;
-        margin: 0;
-    `;
-    
-    // Auto-remover después de la duración especificada
-    if (duracion > 0) {
-        setTimeout(() => {
-            removerNotificacion(notificacion);
-        }, duracion);
-    }
-    
-    // Limpiar notificaciones antiguas
-    limpiarNotificacionesAntiguas();
-    
-    console.log(`📬 Notificación ${tipo} mostrada: ${mensaje.substring(0, 50)}...`);
-}
-
-// ===== FUNCIÓN PARA REMOVER NOTIFICACIONES CON ANIMACIÓN =====
-function removerNotificacion(notificacion) {
-    if (!notificacion || !notificacion.parentElement) return;
-    
-    // Animar salida
-    notificacion.style.transform = 'translateX(400px)';
-    notificacion.style.opacity = '0';
-    
-    setTimeout(() => {
-        if (notificacion.parentElement) {
-            notificacion.remove();
-        }
-    }, 400);
-}
-
-// ===== FUNCIÓN PARA LIMPIAR NOTIFICACIONES ANTIGUAS =====
-function limpiarNotificacionesAntiguas() {
-    const container = document.getElementById('notificaciones-container');
-    if (!container) return;
-    
-    const notificaciones = container.querySelectorAll('.notificacion');
-    if (notificaciones.length > 5) { // Máximo 5 notificaciones visible
-        // Remover las más antiguas
-        for (let i = 0; i < notificaciones.length - 5; i++) {
-            removerNotificacion(notificaciones[i]);
-        }
-    }
-}
-
-// ===== ESTILOS CSS MEJORADOS PARA NOTIFICACIONES =====
-const estilosNotificacionesMejorados = `
-    /* Animaciones para notificaciones */
-    @keyframes slideInFromRight {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-    
-    @keyframes slideOutToRight {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-    }
-    
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    /* Contenedor de notificaciones */
-    #notificaciones-container {
-        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
-    
-    /* Efectos hover para notificaciones */
-    .notificacion {
-        cursor: default;
-        user-select: none;
-    }
-    
-    .notificacion:hover {
-        transform: translateX(0) scale(1.02) !important;
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.16), 0 4px 12px rgba(0, 0, 0, 0.12) !important;
-    }
-    
-    /* Responsive para móviles */
-    @media (max-width: 480px) {
-        .notificacion {
-            min-width: auto !important;
-            width: 100% !important;
-            font-size: 13px !important;
-        }
-        
-        .notificacion-text {
-            font-size: 13px !important;
-        }
-        
-        .notificacion-icon i {
-            font-size: 18px !important;
-        }
-    }
-    
-    /* Ajustes para diferentes tipos */
-    .notificacion-exito .notificacion-icon i,
-    .notificacion-success .notificacion-icon i {
-        color: #28a745 !important;
-    }
-    
-    .notificacion-error .notificacion-icon i {
-        color: #dc3545 !important;
-    }
-    
-    .notificacion-warning .notificacion-icon i {
-        color: #ffc107 !important;
-    }
-    
-    .notificacion-info .notificacion-icon i {
-        color: #0a253c !important;
-    }
-`;
-
-// Inyectar estilos mejorados
-if (!document.getElementById('notificaciones-mejoradas-styles')) {
-    const styleSheet = document.createElement('style');
-    styleSheet.id = 'notificaciones-mejoradas-styles';
-    styleSheet.textContent = estilosNotificacionesMejorados;
-    document.head.appendChild(styleSheet);
-}
-
-// ===== ESCUCHAR CAMBIOS DE TAMAÑO PARA REPOSICIONAR =====
-window.addEventListener('resize', () => {
-    setTimeout(ajustarPosicionNotificaciones, 100);
-});
-
-// ===== FUNCIÓN DE UTILIDAD PARA MOSTRAR NOTIFICACIONES ESPECÍFICAS =====
-window.notificarExito = function(mensaje, duracion = 4000) {
-    mostrarNotificacion(mensaje, 'exito', duracion);
-};
-
-window.notificarError = function(mensaje, duracion = 6000) {
-    mostrarNotificacion(mensaje, 'error', duracion);
-};
-
-window.notificarInfo = function(mensaje, duracion = 4000) {
-    mostrarNotificacion(mensaje, 'info', duracion);
-};
-
-window.notificarWarning = function(mensaje, duracion = 5000) {
-    mostrarNotificacion(mensaje, 'warning', duracion);
-};
-
-// ===== FUNCIÓN DE DEBUG PARA TESTEAR =====
-window.debugStock = function(productoId) {
-    console.log('🔍 Debug de stock para producto:', productoId);
-    
-    const stockElement = document.getElementById(`cantidad-${productoId}`);
-    const buttons = document.querySelectorAll(`.stock-btn[data-id="${productoId}"]`);
-    
-    console.log('Stock element:', stockElement);
-    console.log('Stock buttons:', buttons);
-    console.log('Cantidad actual:', stockElement ? stockElement.textContent : 'No encontrado');
-    
-    return {
-        element: stockElement,
-        buttons: Array.from(buttons),
-        currentStock: stockElement ? parseInt(stockElement.textContent.replace(/,/g, '')) : null
-    };
-};
-
-// ===== FUNCIONES EXPUESTAS GLOBALMENTE =====
-window.toggleModoSeleccion = toggleModoSeleccion;
-window.limpiarCarrito = limpiarCarrito;
-window.procederEntrega = procederEntrega;
-window.cerrarModalEntrega = cerrarModalEntrega;
-window.confirmarEntrega = confirmarEntrega;
-window.abrirModalEnvio = abrirModalEnvio;
-window.cerrarModal = cerrarModal;
-window.adjustQuantity = adjustQuantity;
-window.verProducto = verProducto;
-window.editarProducto = editarProducto;
-window.eliminarProducto = eliminarProducto;
-window.manejarCerrarSesion = manejarCerrarSesion;
-window.ajustarCantidadCarrito = ajustarCantidadCarrito;
-window.removerDelCarrito = removerDelCarrito;
-window.toggleCarrito = toggleCarrito;
-window.minimizarCarrito = minimizarCarrito;
-window.expandirCarrito = expandirCarrito;
-window.ajustarTamañoCarrito = ajustarTamañoCarrito;
-
-console.log('🚀 Sistema de carrito de entrega completamente inicializado con notificaciones arriba-derecha');

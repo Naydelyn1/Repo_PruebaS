@@ -211,7 +211,6 @@ try {
     } elseif ($nueva_cantidad < 10) {
         $estado_stock = 'bajo';
     }
-
     //  RESPUESTA EXITOSA CON URLs LIMPIAS OPCIONALES
     $response_data = [
         'nueva_cantidad' => $nueva_cantidad,
