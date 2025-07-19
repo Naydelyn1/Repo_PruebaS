@@ -25,7 +25,7 @@ if (!isset($_GET['id']) || !filter_var($_GET['id'], FILTER_VALIDATE_INT)) {
 
 $producto_id = $_GET['id'];
 
-// ⭐ MANTENER LA LÓGICA ORIGINAL - OBTENER Y PROCESAR PARÁMETROS DE CONTEXTO
+//  MANTENER LA LÓGICA ORIGINAL - OBTENER Y PROCESAR PARÁMETROS DE CONTEXTO
 $context_params = isset($_GET['from']) ? $_GET['from'] : '';
 parse_str($context_params, $context_array);
 
@@ -100,7 +100,7 @@ if (!$producto) {
     exit();
 }
 
-// ⭐ CONSTRUIR URLs DE NAVEGACIÓN CON CONTEXTO
+// CONSTRUIR URLs DE NAVEGACIÓN CON CONTEXTO
 $return_url = buildReturnUrl($context_array, $producto);
 $return_text = getContextDescription($context_array, $producto);
 $should_return_to_warehouse = shouldReturnToWarehouse($context_array, $producto);
@@ -114,7 +114,6 @@ if ($usuario_rol != 'admin' && $usuario_almacen_id != $producto['almacen_id']) {
     header("Location: listar.php");
     exit();
 }
-
 
 // Obtener historial de movimientos del producto
 $sql_movimientos = "SELECT m.*, 
