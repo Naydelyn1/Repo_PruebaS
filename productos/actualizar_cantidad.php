@@ -143,6 +143,7 @@ try {
         $usuario_id = $_SESSION["user_id"];
         $descripcion = "Ajuste manual de cantidad: {$accion} 1 unidad";
         
+        
         // Verificar si la tabla movimientos existe y tiene las columnas necesarias
         $check_movimientos = $conn->query("SHOW TABLES LIKE 'movimientos'");
         if ($check_movimientos && $check_movimientos->num_rows > 0) {
@@ -212,7 +213,8 @@ try {
         $estado_stock = 'bajo';
     }
     
-    // ⭐ RESPUESTA EXITOSA CON URLs LIMPIAS OPCIONALES
+
+    //  RESPUESTA EXITOSA CON URLs LIMPIAS OPCIONALES
     $response_data = [
         'nueva_cantidad' => $nueva_cantidad,
         'cantidad_anterior' => $cantidad_actual,
@@ -223,6 +225,7 @@ try {
         'puede_restar' => $nueva_cantidad > 0,
         'producto_id' => $producto_id
     ];
+
     
     sendJsonResponse(true, 'Cantidad actualizada correctamente', $response_data);
 
@@ -232,6 +235,7 @@ try {
     
     http_response_code(500);
     sendJsonResponse(false, 'Error de base de datos. Contacte al administrador.');
+  
     
 } catch (Exception $e) {
     // Log del error

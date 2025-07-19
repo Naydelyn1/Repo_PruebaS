@@ -115,6 +115,7 @@ if ($usuario_rol != 'admin' && $usuario_almacen_id != $producto['almacen_id']) {
     exit();
 }
 
+
 // Obtener historial de movimientos del producto
 $sql_movimientos = "SELECT m.*, 
                     CASE 
@@ -627,6 +628,7 @@ if ($result_pendientes && $row_pendientes = $result_pendientes->fetch_assoc()) {
                 </div>
             </div>
 
+
             <!-- Productos Similares -->
             <div class="similar-products-card">
                 <div class="card-header">
@@ -669,6 +671,7 @@ if ($result_pendientes && $row_pendientes = $result_pendientes->fetch_assoc()) {
                     <?php endif; ?>
                 </div>
             </div>
+
 
             <!-- Acciones Rápidas -->
             <div class="quick-actions-card">
