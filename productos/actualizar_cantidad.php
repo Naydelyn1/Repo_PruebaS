@@ -142,8 +142,7 @@ try {
     try {
         $usuario_id = $_SESSION["user_id"];
         $descripcion = "Ajuste manual de cantidad: {$accion} 1 unidad";
-        
-        
+
         // Verificar si la tabla movimientos existe y tiene las columnas necesarias
         $check_movimientos = $conn->query("SHOW TABLES LIKE 'movimientos'");
         if ($check_movimientos && $check_movimientos->num_rows > 0) {
@@ -212,7 +211,6 @@ try {
     } elseif ($nueva_cantidad < 10) {
         $estado_stock = 'bajo';
     }
-    
 
     //  RESPUESTA EXITOSA CON URLs LIMPIAS OPCIONALES
     $response_data = [
@@ -226,7 +224,6 @@ try {
         'producto_id' => $producto_id
     ];
 
-    
     sendJsonResponse(true, 'Cantidad actualizada correctamente', $response_data);
 
 } catch (mysqli_sql_exception $e) {
