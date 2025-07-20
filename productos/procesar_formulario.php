@@ -74,6 +74,8 @@ if ($conn->connect_error) {
 
 // Obtener ID de usuario de la sesión
 $usuario_id = $_SESSION['user_id'];
+$usuario_rol = $_SESSION['user_role'] ?? 'usuario';
+$usuario_almacen_id = $_SESSION['almacen_id'] ?? null;
 
 // Detectar si es entrega a personal
 $input = file_get_contents('php://input');
@@ -82,7 +84,7 @@ $json_data = null;
 if (!empty($input)) {
     $json_data = json_decode($input, true);
     if ($json_data && isset($json_data['tipo_operacion']) && $json_data['tipo_operacion'] === 'entrega_personal') {
-        manejarEntregaPersonal($conn, $usuario_id, $json_data);
+        manejarEntregaPersonal($conn, $usuario_id, $usuario_rol, $usuario_almacen_id, $json_data);
         exit();
     }
 }
@@ -309,8 +311,10 @@ try {
     }
 }
 
-// Función para manejar entregas a personal
-function manejarEntregaPersonal($conn, $usuario_id, $data) {
+// ========================================
+// FUNCIÓN CORREGIDA PARA MANEJAR ENTREGAS A PERSONAL
+// ========================================
+function manejarEntregaPersonal($conn, $usuario_id, $usuario_rol, $usuario_almacen_id, $data) {
     try {
         // Validar datos requeridos
         if (empty($data['destinatario_nombre']) || empty($data['destinatario_dni']) || empty($data['productos'])) {
@@ -337,24 +341,44 @@ function manejarEntregaPersonal($conn, $usuario_id, $data) {
         // Iniciar transacción
         $conn->begin_transaction();
         
-        // Obtener almacén del usuario
-        $sql_usuario = "SELECT almacen_id FROM usuarios WHERE id = ?";
-        $stmt_usuario = $conn->prepare($sql_usuario);
-        $stmt_usuario->bind_param("i", $usuario_id);
-        $stmt_usuario->execute();
-        $usuario_info = $stmt_usuario->get_result()->fetch_assoc();
-        $stmt_usuario->close();
+        // ✅ CORRECCIÓN: Determinar almacén correctamente según rol
+        $almacen_trabajo = null;
         
-        if (!$usuario_info || !$usuario_info['almacen_id']) {
-            throw new Exception('Usuario no tiene almacén asignado');
+        if ($usuario_rol === 'admin') {
+            // Los admins pueden trabajar con cualquier almacén
+            // Obtenemos el almacén del primer producto para determinar el contexto
+            $primer_producto_id = (int)$productos[0]['id'];
+            
+            $sql_almacen_producto = "SELECT p.almacen_id, a.nombre as almacen_nombre 
+                                   FROM productos p 
+                                   JOIN almacenes a ON p.almacen_id = a.id 
+                                   WHERE p.id = ?";
+            $stmt_almacen = $conn->prepare($sql_almacen_producto);
+            $stmt_almacen->bind_param("i", $primer_producto_id);
+            $stmt_almacen->execute();
+            $result_almacen = $stmt_almacen->get_result();
+            
+            if ($result_almacen->num_rows === 0) {
+                throw new Exception("No se pudo determinar el almacén de trabajo. Producto ID $primer_producto_id no encontrado.");
+            }
+            
+            $almacen_info = $result_almacen->fetch_assoc();
+            $almacen_trabajo = $almacen_info['almacen_id'];
+            $stmt_almacen->close();
+            
+        } else {
+            // Usuarios normales solo pueden trabajar con su almacén asignado
+            if (!$usuario_almacen_id) {
+                throw new Exception('Su usuario no tiene un almacén asignado. Contacte al administrador.');
+            }
+            $almacen_trabajo = $usuario_almacen_id;
         }
-        
-        $almacen_usuario = $usuario_info['almacen_id'];
         
         $productos_procesados = [];
         $total_unidades = 0;
+        $productos_no_encontrados = [];
         
-        // Procesar cada producto
+        // ✅ CORRECCIÓN: Procesar cada producto con mejor manejo de errores
         foreach ($productos as $producto) {
             $producto_id = (int)$producto['id'];
             $cantidad_solicitada = (int)$producto['cantidad'];
@@ -363,38 +387,60 @@ function manejarEntregaPersonal($conn, $usuario_id, $data) {
                 continue;
             }
             
-            // Obtener información del producto y verificar stock
-            $sql_producto = "SELECT p.*, a.nombre as almacen_nombre, c.nombre as categoria_nombre 
+            // ✅ CORRECCIÓN: Consulta más robusta con mejor manejo de errores
+            $sql_producto = "SELECT p.id, p.nombre, p.cantidad, p.almacen_id,
+                                   a.nombre as almacen_nombre, 
+                                   c.nombre as categoria_nombre 
                             FROM productos p 
                             JOIN almacenes a ON p.almacen_id = a.id 
                             JOIN categorias c ON p.categoria_id = c.id 
-                            WHERE p.id = ? AND p.almacen_id = ? FOR UPDATE";
+                            WHERE p.id = ? FOR UPDATE";
+            
             $stmt_producto = $conn->prepare($sql_producto);
-            $stmt_producto->bind_param("ii", $producto_id, $almacen_usuario);
+            if (!$stmt_producto) {
+                throw new Exception("Error preparando consulta de producto: " . $conn->error);
+            }
+            
+            $stmt_producto->bind_param("i", $producto_id);
             $stmt_producto->execute();
             $result_producto = $stmt_producto->get_result();
             
             if ($result_producto->num_rows === 0) {
                 $stmt_producto->close();
-                throw new Exception("Producto con ID $producto_id no encontrado en su almacén");
+                $productos_no_encontrados[] = "Producto ID $producto_id";
+                continue; // Continuar con el siguiente producto
             }
             
             $producto_info = $result_producto->fetch_assoc();
             $stmt_producto->close();
             
+            // ✅ CORRECCIÓN: Verificar que el producto pertenece al almacén correcto
+            if ($producto_info['almacen_id'] != $almacen_trabajo) {
+                // Para admin: mostrar error específico del almacén
+                if ($usuario_rol === 'admin') {
+                    throw new Exception("El producto '{$producto_info['nombre']}' no pertenece al almacén de trabajo ({$producto_info['almacen_nombre']}). Todos los productos deben ser del mismo almacén.");
+                } else {
+                    throw new Exception("El producto '{$producto_info['nombre']}' no pertenece a su almacén asignado.");
+                }
+            }
+            
             // Verificar stock disponible
             if ($producto_info['cantidad'] < $cantidad_solicitada) {
-                throw new Exception("Stock insuficiente para {$producto_info['nombre']}. Disponible: {$producto_info['cantidad']}, Solicitado: $cantidad_solicitada");
+                throw new Exception("Stock insuficiente para '{$producto_info['nombre']}'. Disponible: {$producto_info['cantidad']}, Solicitado: $cantidad_solicitada");
             }
             
             // Actualizar stock del producto
             $nuevo_stock = $producto_info['cantidad'] - $cantidad_solicitada;
             $sql_update = "UPDATE productos SET cantidad = ? WHERE id = ?";
             $stmt_update = $conn->prepare($sql_update);
+            if (!$stmt_update) {
+                throw new Exception("Error preparando actualización de stock: " . $conn->error);
+            }
+            
             $stmt_update->bind_param("ii", $nuevo_stock, $producto_id);
             
             if (!$stmt_update->execute()) {
-                throw new Exception("Error al actualizar stock del producto {$producto_info['nombre']}");
+                throw new Exception("Error al actualizar stock del producto '{$producto_info['nombre']}': " . $stmt_update->error);
             }
             $stmt_update->close();
             
@@ -403,17 +449,21 @@ function manejarEntregaPersonal($conn, $usuario_id, $data) {
                            (usuario_responsable_id, nombre_destinatario, dni_destinatario, producto_id, cantidad, almacen_id, fecha_entrega) 
                            VALUES (?, ?, ?, ?, ?, ?, NOW())";
             $stmt_entrega = $conn->prepare($sql_entrega);
+            if (!$stmt_entrega) {
+                throw new Exception("Error preparando registro de entrega: " . $conn->error);
+            }
+            
             $stmt_entrega->bind_param("issiii", 
                 $usuario_id, 
                 $destinatario_nombre, 
                 $destinatario_dni, 
                 $producto_id, 
                 $cantidad_solicitada, 
-                $almacen_usuario
+                $almacen_trabajo
             );
             
             if (!$stmt_entrega->execute()) {
-                throw new Exception("Error al registrar entrega del producto {$producto_info['nombre']}");
+                throw new Exception("Error al registrar entrega del producto '{$producto_info['nombre']}': " . $stmt_entrega->error);
             }
             $stmt_entrega->close();
             
@@ -422,29 +472,49 @@ function manejarEntregaPersonal($conn, $usuario_id, $data) {
                               (producto_id, almacen_origen, cantidad, tipo, fecha, usuario_id, estado, descripcion) 
                               VALUES (?, ?, ?, 'salida', NOW(), ?, 'completado', ?)";
             $stmt_mov = $conn->prepare($sql_movimiento);
+            if (!$stmt_mov) {
+                throw new Exception("Error preparando registro de movimiento: " . $conn->error);
+            }
+            
             $descripcion = "Entrega a {$destinatario_nombre} (DNI: {$destinatario_dni})";
             $stmt_mov->bind_param("iiiis", 
                 $producto_id, 
-                $almacen_usuario, 
+                $almacen_trabajo, 
                 $cantidad_solicitada, 
                 $usuario_id, 
                 $descripcion
             );
-            $stmt_mov->execute();
+            
+            if (!$stmt_mov->execute()) {
+                throw new Exception("Error al registrar movimiento: " . $stmt_mov->error);
+            }
             $stmt_mov->close();
             
             $productos_procesados[] = [
                 'id' => $producto_id,
                 'nombre' => $producto_info['nombre'],
                 'cantidad' => $cantidad_solicitada,
-                'almacen' => $producto_info['almacen_nombre']
+                'almacen' => $producto_info['almacen_nombre'],
+                'stock_anterior' => $producto_info['cantidad'],
+                'stock_nuevo' => $nuevo_stock
             ];
             
             $total_unidades += $cantidad_solicitada;
         }
         
+        // ✅ CORRECCIÓN: Manejo de productos no encontrados
+        if (!empty($productos_no_encontrados) && empty($productos_procesados)) {
+            throw new Exception('Ninguno de los productos seleccionados se pudo procesar: ' . implode(', ', $productos_no_encontrados));
+        }
+        
         if (empty($productos_procesados)) {
             throw new Exception('No se procesó ningún producto válido');
+        }
+        
+        // Mensaje de advertencia si algunos productos no se procesaron
+        $mensaje_advertencia = '';
+        if (!empty($productos_no_encontrados)) {
+            $mensaje_advertencia = ' NOTA: Algunos productos no se encontraron: ' . implode(', ', $productos_no_encontrados);
         }
         
         // Registrar en logs de actividad si existe la tabla
@@ -455,17 +525,19 @@ function manejarEntregaPersonal($conn, $usuario_id, $data) {
                             VALUES (?, 'ENTREGA_PRODUCTOS', ?, NOW())";
                 $stmt_log = $conn->prepare($sql_log);
                 
-                // Crear lista de productos para el detalle
-                $productos_nombres = array_slice(array_map(function($p) { return $p['nombre']; }, $productos_procesados), 0, 3);
-                $productos_texto = implode(', ', $productos_nombres);
-                if (count($productos_procesados) > 3) {
-                    $productos_texto .= '...';
+                if ($stmt_log) {
+                    // Crear lista de productos para el detalle
+                    $productos_nombres = array_slice(array_map(function($p) { return $p['nombre']; }, $productos_procesados), 0, 3);
+                    $productos_texto = implode(', ', $productos_nombres);
+                    if (count($productos_procesados) > 3) {
+                        $productos_texto .= '...';
+                    }
+                    
+                    $detalle = "Entregó " . count($productos_procesados) . " tipo(s) de productos ({$total_unidades} unidades total) a {$destinatario_nombre} (DNI: {$destinatario_dni}). Productos: {$productos_texto}";
+                    $stmt_log->bind_param("is", $usuario_id, $detalle);
+                    $stmt_log->execute();
+                    $stmt_log->close();
                 }
-                
-                $detalle = "Entregó " . count($productos_procesados) . " tipo(s) de productos ({$total_unidades} unidades total) a {$destinatario_nombre} (DNI: {$destinatario_dni}). Productos: {$productos_texto}";
-                $stmt_log->bind_param("is", $usuario_id, $detalle);
-                $stmt_log->execute();
-                $stmt_log->close();
             }
         } catch (Exception $e) {
             // No es crítico si falla el log
@@ -475,22 +547,41 @@ function manejarEntregaPersonal($conn, $usuario_id, $data) {
         // Confirmar transacción
         $conn->commit();
         
-        // Respuesta exitosa
-        enviarRespuesta(true, 'Entrega registrada exitosamente', [
+        // ✅ CORRECCIÓN: Respuesta exitosa mejorada
+        $mensaje_principal = '✅ Entrega registrada exitosamente';
+        $mensaje_detalle = "Se entregaron {$total_unidades} unidades de " . count($productos_procesados) . " tipo(s) de productos a {$destinatario_nombre}";
+        
+        if ($mensaje_advertencia) {
+            $mensaje_principal .= $mensaje_advertencia;
+        }
+        
+        enviarRespuesta(true, $mensaje_principal, [
             'destinatario' => $destinatario_nombre,
             'dni' => $destinatario_dni,
             'productos_entregados' => count($productos_procesados),
             'total_unidades' => $total_unidades,
             'fecha_entrega' => date('Y-m-d H:i:s'),
-            'productos' => $productos_procesados
+            'productos' => $productos_procesados,
+            'productos_no_encontrados' => $productos_no_encontrados,
+            'almacen_trabajo' => $almacen_trabajo,
+            'preservar_contexto' => true,
+            'mensaje_detalle' => $mensaje_detalle
         ]);
-        
         
     } catch (Exception $e) {
         // Rollback en caso de error
         $conn->rollback();
-        error_log("Error en entrega personal: " . $e->getMessage());
-        enviarRespuesta(false, $e->getMessage());
+        error_log("Error en entrega personal: " . $e->getMessage() . " | Usuario: " . $usuario_id);
+        
+        // ✅ CORRECCIÓN: Mensaje de error más específico
+        $mensaje_error = $e->getMessage();
+        
+        // Agregar información adicional para debugging si es necesario
+        if (strpos($mensaje_error, 'producto') === false && strpos($mensaje_error, 'almacén') === false) {
+            $mensaje_error = "Error procesando la entrega: " . $mensaje_error;
+        }
+        
+        enviarRespuesta(false, $mensaje_error);
     }
 }
 ?>

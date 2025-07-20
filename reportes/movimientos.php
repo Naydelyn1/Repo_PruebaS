@@ -422,7 +422,6 @@ function construirURL($pagina) {
         .header-content {
             flex-direction: column;
             gap: 15px;
-            
         }
         
         .header-actions {

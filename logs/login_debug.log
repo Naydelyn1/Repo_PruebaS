@@ -1,0 +1,270 @@
+[2025-06-22 05:45:44] === INICIO DEL PROCESO DE LOGIN ===
+[2025-06-22 05:45:44] Método: POST
+[2025-06-22 05:45:44] Datos POST recibidos: Array
+(
+    [correo] => jhamirsilva@gmail.com
+    [password] => 17577855&Js
+)
+
+[2025-06-22 05:45:44] Correo procesado: jhamirsilva@gmail.com
+[2025-06-22 05:45:44] Password longitud: 11
+[2025-06-22 05:45:44] Conexión a BD exitosa
+[2025-06-22 05:45:44] SQL Query: SELECT id, nombre, apellidos, contrasena, rol, almacen_id FROM usuarios WHERE correo = ? AND estado = 'activo'
+[2025-06-22 05:45:44] Número de filas encontradas: 1
+[2025-06-22 05:45:44] Usuario encontrado: Jhamir Alexander Silva Baldera
+[2025-06-22 05:45:44] Verificación de contraseña: FALLIDA
+[2025-06-22 05:45:44] ERROR: Contraseña incorrecta
+[2025-06-22 05:45:44] Conexión a BD cerrada
+[2025-06-22 05:45:44] Redirigiendo con error: invalid_credentials
+[2025-06-22 05:45:50] === INICIO DEL PROCESO DE LOGIN ===
+[2025-06-22 05:45:50] Método: POST
+[2025-06-22 05:45:50] Datos POST recibidos: Array
+(
+    [correo] => jhamirsilva@gmail.com
+    [password] => 71749437&Js
+)
+
+[2025-06-22 05:45:50] Correo procesado: jhamirsilva@gmail.com
+[2025-06-22 05:45:50] Password longitud: 11
+[2025-06-22 05:45:50] Conexión a BD exitosa
+[2025-06-22 05:45:50] SQL Query: SELECT id, nombre, apellidos, contrasena, rol, almacen_id FROM usuarios WHERE correo = ? AND estado = 'activo'
+[2025-06-22 05:45:50] Número de filas encontradas: 1
+[2025-06-22 05:45:50] Usuario encontrado: Jhamir Alexander Silva Baldera
+[2025-06-22 05:45:50] Verificación de contraseña: FALLIDA
+[2025-06-22 05:45:50] ERROR: Contraseña incorrecta
+[2025-06-22 05:45:50] Conexión a BD cerrada
+[2025-06-22 05:45:50] Redirigiendo con error: invalid_credentials
+[2025-06-22 05:46:05] === INICIO DEL PROCESO DE LOGIN ===
+[2025-06-22 05:46:05] Método: POST
+[2025-06-22 05:46:05] Datos POST recibidos: Array
+(
+    [correo] => jhamirsilva@gmail.com
+    [password] => 17577855&Js
+)
+
+[2025-06-22 05:46:05] Correo procesado: jhamirsilva@gmail.com
+[2025-06-22 05:46:05] Password longitud: 11
+[2025-06-22 05:46:05] Conexión a BD exitosa
+[2025-06-22 05:46:05] SQL Query: SELECT id, nombre, apellidos, contrasena, rol, almacen_id FROM usuarios WHERE correo = ? AND estado = 'activo'
+[2025-06-22 05:46:05] Número de filas encontradas: 1
+[2025-06-22 05:46:05] Usuario encontrado: Jhamir Alexander Silva Baldera
+[2025-06-22 05:46:05] Verificación de contraseña: FALLIDA
+[2025-06-22 05:46:05] ERROR: Contraseña incorrecta
+[2025-06-22 05:46:05] Conexión a BD cerrada
+[2025-06-22 05:46:05] Redirigiendo con error: invalid_credentials
+[2025-06-22 05:46:28] === INICIO DEL PROCESO DE LOGIN ===
+[2025-06-22 05:46:28] Método: POST
+[2025-06-22 05:46:28] Datos POST recibidos: Array
+(
+    [correo] => jhamirsilva@gmail.com
+    [password] => 71749437
+)
+
+[2025-06-22 05:46:28] Correo procesado: jhamirsilva@gmail.com
+[2025-06-22 05:46:28] Password longitud: 8
+[2025-06-22 05:46:28] Conexión a BD exitosa
+[2025-06-22 05:46:28] SQL Query: SELECT id, nombre, apellidos, contrasena, rol, almacen_id FROM usuarios WHERE correo = ? AND estado = 'activo'
+[2025-06-22 05:46:28] Número de filas encontradas: 1
+[2025-06-22 05:46:28] Usuario encontrado: Jhamir Alexander Silva Baldera
+[2025-06-22 05:46:28] Verificación de contraseña: EXITOSA
+[2025-06-22 05:46:28] === LOGIN EXITOSO ===
+[2025-06-22 05:46:28] ID de sesión regenerado
+[2025-06-22 05:46:28] Datos de sesión guardados:
+[2025-06-22 05:46:28] - user_id: 8
+[2025-06-22 05:46:28] - user_name: Jhamir Alexander Silva Baldera
+[2025-06-22 05:46:28] - user_role: admin
+[2025-06-22 05:46:28] - almacen_id: 3
+[2025-06-22 05:46:28] Dashboard encontrado en: C:\xampp\htdocs\comseproa_inventory\auth/../dashboard.php
+[2025-06-22 05:46:28] Redirigiendo a dashboard...
+[2025-06-22 06:02:17] === INICIO DEL PROCESO DE LOGIN ===
+[2025-06-22 06:02:17] Método: POST
+[2025-06-22 06:02:17] Datos POST recibidos: Array
+(
+    [correo] => jhamirsilva@gmail.com
+    [password] => 71749437
+)
+
+[2025-06-22 06:02:17] Correo procesado: jhamirsilva@gmail.com
+[2025-06-22 06:02:17] Password longitud: 8
+[2025-06-22 06:02:17] Conexión a BD exitosa
+[2025-06-22 06:02:17] SQL Query: SELECT id, nombre, apellidos, contrasena, rol, almacen_id FROM usuarios WHERE correo = ? AND estado = 'activo'
+[2025-06-22 06:02:17] Número de filas encontradas: 1
+[2025-06-22 06:02:17] Usuario encontrado: Jhamir Alexander Silva Baldera
+[2025-06-22 06:02:17] Verificación de contraseña: EXITOSA
+[2025-06-22 06:02:17] === LOGIN EXITOSO ===
+[2025-06-22 06:02:17] ID de sesión regenerado
+[2025-06-22 06:02:17] Datos de sesión guardados:
+[2025-06-22 06:02:17] - user_id: 8
+[2025-06-22 06:02:17] - user_name: Jhamir Alexander Silva Baldera
+[2025-06-22 06:02:17] - user_role: admin
+[2025-06-22 06:02:17] - almacen_id: 3
+[2025-06-22 06:02:17] Dashboard encontrado en: C:\xampp\htdocs\comseproa_inventory\auth/../dashboard.php
+[2025-06-22 06:02:17] Redirigiendo a dashboard...
+[2025-06-22 06:55:45] === INICIO DEL PROCESO DE LOGIN ===
+[2025-06-22 06:55:45] Método: POST
+[2025-06-22 06:55:45] Datos POST recibidos: Array
+(
+    [correo] => jhamirsilva@gmail.com
+    [password] => 71749437
+)
+
+[2025-06-22 06:55:45] Correo procesado: jhamirsilva@gmail.com
+[2025-06-22 06:55:45] Password longitud: 8
+[2025-06-22 06:55:45] Conexión a BD exitosa
+[2025-06-22 06:55:45] SQL Query: SELECT id, nombre, apellidos, contrasena, rol, almacen_id FROM usuarios WHERE correo = ? AND estado = 'activo'
+[2025-06-22 06:55:45] Número de filas encontradas: 1
+[2025-06-22 06:55:45] Usuario encontrado: Jhamir Alexander Silva Baldera
+[2025-06-22 06:55:45] Verificación de contraseña: EXITOSA
+[2025-06-22 06:55:45] === LOGIN EXITOSO ===
+[2025-06-22 06:55:45] ID de sesión regenerado
+[2025-06-22 06:55:45] Datos de sesión guardados:
+[2025-06-22 06:55:45] - user_id: 8
+[2025-06-22 06:55:45] - user_name: Jhamir Alexander Silva Baldera
+[2025-06-22 06:55:45] - user_role: admin
+[2025-06-22 06:55:45] - almacen_id: 3
+[2025-06-22 06:55:45] Dashboard encontrado en: C:\xampp\htdocs\comseproa_inventory\auth/../dashboard.php
+[2025-06-22 06:55:45] Redirigiendo a dashboard...
+[2025-06-22 07:20:06] === INICIO DEL PROCESO DE LOGIN ===
+[2025-06-22 07:20:06] Método: POST
+[2025-06-22 07:20:06] Datos POST recibidos: Array
+(
+    [correo] => jhamirsilva@gmail.com
+    [password] => 71749437
+)
+
+[2025-06-22 07:20:06] Correo procesado: jhamirsilva@gmail.com
+[2025-06-22 07:20:06] Password longitud: 8
+[2025-06-22 07:20:06] Conexión a BD exitosa
+[2025-06-22 07:20:06] SQL Query: SELECT id, nombre, apellidos, contrasena, rol, almacen_id FROM usuarios WHERE correo = ? AND estado = 'activo'
+[2025-06-22 07:20:06] Número de filas encontradas: 1
+[2025-06-22 07:20:06] Usuario encontrado: Jhamir Alexander Silva Baldera
+[2025-06-22 07:20:06] Verificación de contraseña: EXITOSA
+[2025-06-22 07:20:06] === LOGIN EXITOSO ===
+[2025-06-22 07:20:06] ID de sesión regenerado
+[2025-06-22 07:20:06] Datos de sesión guardados:
+[2025-06-22 07:20:06] - user_id: 8
+[2025-06-22 07:20:06] - user_name: Jhamir Alexander Silva Baldera
+[2025-06-22 07:20:06] - user_role: admin
+[2025-06-22 07:20:06] - almacen_id: 3
+[2025-06-22 07:20:06] Dashboard encontrado en: C:\xampp\htdocs\comseproa_inventory\auth/../dashboard.php
+[2025-06-22 07:20:06] Redirigiendo a dashboard...
+[2025-06-25 18:13:57] === INICIO DEL PROCESO DE LOGIN ===
+[2025-06-25 18:13:57] Método: POST
+[2025-06-25 18:13:57] Datos POST recibidos: Array
+(
+    [correo] => jhamirsilva@gmail.com
+    [password] => 71749437
+)
+
+[2025-06-25 18:13:57] Correo procesado: jhamirsilva@gmail.com
+[2025-06-25 18:13:57] Password longitud: 8
+[2025-06-25 18:13:57] Conexión a BD exitosa
+[2025-06-25 18:13:57] SQL Query: SELECT id, nombre, apellidos, contrasena, rol, almacen_id FROM usuarios WHERE correo = ? AND estado = 'activo'
+[2025-06-25 18:13:57] Número de filas encontradas: 1
+[2025-06-25 18:13:57] Usuario encontrado: Jhamir Silva Baldera
+[2025-06-25 18:13:57] Verificación de contraseña: EXITOSA
+[2025-06-25 18:13:57] === LOGIN EXITOSO ===
+[2025-06-25 18:13:57] ID de sesión regenerado
+[2025-06-25 18:13:57] Datos de sesión guardados:
+[2025-06-25 18:13:57] - user_id: 8
+[2025-06-25 18:13:57] - user_name: Jhamir Silva Baldera
+[2025-06-25 18:13:57] - user_role: admin
+[2025-06-25 18:13:57] - almacen_id: 3
+[2025-06-25 18:13:57] Dashboard encontrado en: C:\xampp\htdocs\comseproa_inventory\auth/../dashboard.php
+[2025-06-25 18:13:57] Redirigiendo a dashboard...
+[2025-07-01 06:45:41] === INICIO DEL PROCESO DE LOGIN ===
+[2025-07-01 06:45:41] Método: POST
+[2025-07-01 06:45:41] Datos POST recibidos: Array
+(
+    [correo] => jhamirsilva@gmail.com
+    [password] => 71749437
+)
+
+[2025-07-01 06:45:41] Correo procesado: jhamirsilva@gmail.com
+[2025-07-01 06:45:41] Password longitud: 8
+[2025-07-01 06:45:41] Conexión a BD exitosa
+[2025-07-01 06:45:41] SQL Query: SELECT id, nombre, apellidos, contrasena, rol, almacen_id FROM usuarios WHERE correo = ? AND estado = 'activo'
+[2025-07-01 06:45:41] Número de filas encontradas: 1
+[2025-07-01 06:45:41] Usuario encontrado: Jhamir Silva Baldera
+[2025-07-01 06:45:41] Verificación de contraseña: EXITOSA
+[2025-07-01 06:45:41] === LOGIN EXITOSO ===
+[2025-07-01 06:45:41] ID de sesión regenerado
+[2025-07-01 06:45:41] Datos de sesión guardados:
+[2025-07-01 06:45:41] - user_id: 8
+[2025-07-01 06:45:41] - user_name: Jhamir Silva Baldera
+[2025-07-01 06:45:41] - user_role: admin
+[2025-07-01 06:45:41] - almacen_id: 3
+[2025-07-01 06:45:41] Dashboard encontrado en: C:\xampp\htdocs\comseproa_inventory\auth/../dashboard.php
+[2025-07-01 06:45:41] Redirigiendo a dashboard...
+[2025-07-01 07:14:32] === INICIO DEL PROCESO DE LOGIN ===
+[2025-07-01 07:14:32] Método: POST
+[2025-07-01 07:14:32] Datos POST recibidos: Array
+(
+    [correo] => jhamirsilva@gmail.com
+    [password] => 71749437
+)
+
+[2025-07-01 07:14:32] Correo procesado: jhamirsilva@gmail.com
+[2025-07-01 07:14:32] Password longitud: 8
+[2025-07-01 07:14:32] Conexión a BD exitosa
+[2025-07-01 07:14:32] SQL Query: SELECT id, nombre, apellidos, contrasena, rol, almacen_id FROM usuarios WHERE correo = ? AND estado = 'activo'
+[2025-07-01 07:14:32] Número de filas encontradas: 1
+[2025-07-01 07:14:32] Usuario encontrado: Jhamir Silva Baldera
+[2025-07-01 07:14:32] Verificación de contraseña: EXITOSA
+[2025-07-01 07:14:32] === LOGIN EXITOSO ===
+[2025-07-01 07:14:32] ID de sesión regenerado
+[2025-07-01 07:14:32] Datos de sesión guardados:
+[2025-07-01 07:14:32] - user_id: 8
+[2025-07-01 07:14:32] - user_name: Jhamir Silva Baldera
+[2025-07-01 07:14:32] - user_role: admin
+[2025-07-01 07:14:32] - almacen_id: 3
+[2025-07-01 07:14:32] Dashboard encontrado en: C:\xampp\htdocs\comseproa_inventory\auth/../dashboard.php
+[2025-07-01 07:14:32] Redirigiendo a dashboard...
+[2025-07-01 07:51:22] === INICIO DEL PROCESO DE LOGIN ===
+[2025-07-01 07:51:22] Método: POST
+[2025-07-01 07:51:22] Datos POST recibidos: Array
+(
+    [correo] => jhamirsilva@gmail.com
+    [password] => 71749437
+)
+
+[2025-07-01 07:51:22] Correo procesado: jhamirsilva@gmail.com
+[2025-07-01 07:51:22] Password longitud: 8
+[2025-07-01 07:51:22] Conexión a BD exitosa
+[2025-07-01 07:51:22] SQL Query: SELECT id, nombre, apellidos, contrasena, rol, almacen_id FROM usuarios WHERE correo = ? AND estado = 'activo'
+[2025-07-01 07:51:22] Número de filas encontradas: 1
+[2025-07-01 07:51:22] Usuario encontrado: Jhamir Silva Baldera
+[2025-07-01 07:51:22] Verificación de contraseña: EXITOSA
+[2025-07-01 07:51:22] === LOGIN EXITOSO ===
+[2025-07-01 07:51:22] ID de sesión regenerado
+[2025-07-01 07:51:22] Datos de sesión guardados:
+[2025-07-01 07:51:22] - user_id: 8
+[2025-07-01 07:51:22] - user_name: Jhamir Silva Baldera
+[2025-07-01 07:51:22] - user_role: admin
+[2025-07-01 07:51:22] - almacen_id: 3
+[2025-07-01 07:51:22] Dashboard encontrado en: C:\xampp\htdocs\comseproa_inventory\auth/../dashboard.php
+[2025-07-01 07:51:22] Redirigiendo a dashboard...
+[2025-07-01 08:17:17] === INICIO DEL PROCESO DE LOGIN ===
+[2025-07-01 08:17:17] Método: POST
+[2025-07-01 08:17:17] Datos POST recibidos: Array
+(
+    [correo] => jhamirsilva@gmail.com
+    [password] => 71749437
+)
+
+[2025-07-01 08:17:17] Correo procesado: jhamirsilva@gmail.com
+[2025-07-01 08:17:17] Password longitud: 8
+[2025-07-01 08:17:17] Conexión a BD exitosa
+[2025-07-01 08:17:17] SQL Query: SELECT id, nombre, apellidos, contrasena, rol, almacen_id FROM usuarios WHERE correo = ? AND estado = 'activo'
+[2025-07-01 08:17:17] Número de filas encontradas: 1
+[2025-07-01 08:17:17] Usuario encontrado: Jhamir Silva Baldera
+[2025-07-01 08:17:17] Verificación de contraseña: EXITOSA
+[2025-07-01 08:17:17] === LOGIN EXITOSO ===
+[2025-07-01 08:17:17] ID de sesión regenerado
+[2025-07-01 08:17:17] Datos de sesión guardados:
+[2025-07-01 08:17:17] - user_id: 8
+[2025-07-01 08:17:17] - user_name: Jhamir Silva Baldera
+[2025-07-01 08:17:17] - user_role: admin
+[2025-07-01 08:17:17] - almacen_id: 3
+[2025-07-01 08:17:17] Dashboard encontrado en: C:\xampp\htdocs\comseproa_inventory\auth/../dashboard.php
+[2025-07-01 08:17:17] Redirigiendo a dashboard...
