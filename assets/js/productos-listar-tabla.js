@@ -804,7 +804,11 @@ window.abrirModalEnvio = abrirModalEnvio;
 window.cerrarModal = cerrarModal;
 window.adjustQuantity = adjustQuantity;
 window.verProducto = verProducto;
-window.edit/* ============================================
+window.editarProducto = editarProducto;
+window.eliminarProducto = eliminarProducto;
+window.manejarCerrarSesion = manejarCerrarSesion;
+
+/* ============================================
    PRODUCTOS LISTAR - JAVASCRIPT COMPLETO MEJORADO
    Con carrito persistente, esquina derecha y UX optimizada
    *** VERSIÓN CORREGIDA PARA PRESERVAR CONTEXTO ***
@@ -1569,19 +1573,6 @@ function cerrarModalEntrega() {
     document.getElementById('formEntregaPersonal').reset();
     const btnConfirmar = document.querySelector('.btn-confirm');
     if (btnConfirmar) {
-        btnConfirmar.disabled = true;
-    }
-}
-
-function validarFormularioEntrega() {
-    const nombre = document.getElementById('nombreDestinatario').value.trim();
-    const dni = document.getElementById('dniDestinatario').value.trim();
-    const btnConfirmar = document.querySelector('.btn-confirm');
-    
-    const nombreValido = nombre.length >= 3;
-    const dniValido = /^[0-9]{8}$/.test(dni);
-    
-    if (btnConfirmar) {
         btnConfirmar.disabled = !(nombreValido && dniValido);
     }
 }
@@ -1597,3 +1588,122 @@ function validarDNI(e) {
     input.value = value;
     validarFormularioEntrega();
 }
+
+// ===== FUNCIONES GLOBALES ADICIONALES =====
+window.ajustarCantidadCarrito = ajustarCantidadCarrito;
+window.removerDelCarrito = removerDelCarrito;
+window.validarFormularioEntrega = validarFormularioEntrega;
+window.validarDNI = validarDNI;
+window.mostrarModalEntrega = mostrarModalEntrega;
+window.recargarConContexto = recargarConContexto;
+
+// ===== MANEJO DE ERRORES GLOBALES =====
+window.addEventListener('error', function(e) {
+    console.error('Error JavaScript detectado:', e.error);
+    mostrarNotificacion('Se produjo un error. Recarga la página si persiste.', 'error');
+});
+
+// ===== FUNCIONES DE COMPATIBILIDAD =====
+window.addEventListener('beforeunload', function() {
+    // Guardar estado del carrito antes de salir
+    if (modoSeleccion && carritoEntrega.length > 0) {
+        guardarCarritoEnStorage();
+    }
+});
+
+// ===== OPTIMIZACIONES DE RENDIMIENTO =====
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Optimizar el resize del carrito
+const ajustarTamañoCarritoOptimizado = debounce(ajustarTamañoCarrito, 250);
+window.addEventListener('resize', ajustarTamañoCarritoOptimizado);
+
+// ===== FUNCIONES DE ACCESIBILIDAD =====
+function configurarAccesibilidad() {
+    // Agregar navegación por teclado para checkboxes
+    document.querySelectorAll('.selection-checkbox').forEach(checkbox => {
+        checkbox.setAttribute('tabindex', '0');
+        checkbox.setAttribute('role', 'checkbox');
+        
+        checkbox.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                manejarSeleccionProducto(this);
+            }
+        });
+    });
+    
+    // Mejorar accesibilidad del carrito
+    const carrito = document.getElementById('carritoEntrega');
+    if (carrito) {
+        carrito.setAttribute('role', 'region');
+        carrito.setAttribute('aria-label', 'Carrito de productos para entrega');
+    }
+}
+
+// ===== INICIALIZACIÓN FINAL =====
+document.addEventListener('DOMContentLoaded', function() {
+    // Configurar accesibilidad después de que se cargue todo
+    setTimeout(configurarAccesibilidad, 500);
+    
+    // Indicar que el script se ha cargado completamente
+    console.log('✅ productos-listar-tabla.js cargado completamente');
+    
+    // Emitir evento personalizado para otros scripts
+    window.dispatchEvent(new CustomEvent('productosListarReady', {
+        detail: {
+            version: '2.0.0',
+            features: ['carrito-persistente', 'contexto-preservado', 'notificaciones-mejoradas']
+        }
+    }));
+});
+
+// ===== INFORMACIÓN DE DEBUG =====
+window.productosListarDebug = {
+    version: '2.0.0',
+    obtenerEstado: function() {
+        return {
+            modoSeleccion,
+            carritoEntrega: carritoEntrega.length,
+            productosSeleccionados: productosSeleccionados.size,
+            contexto: CONTEXTO_ACTUAL,
+            carritoMinimizado
+        };
+    },
+    limpiarTodo: function() {
+        desactivarModoSeleccion();
+        limpiarCarritoStorage();
+        console.log('🧹 Estado limpiado completamente');
+    },
+    simularError: function() {
+        throw new Error('Error de prueba para testing');
+    }
+};
+
+console.log('🚀 Sistema de productos inicializado correctamente');
+console.log('📊 Para debug, usar: window.productosListarDebug.obtenerEstado()');
+
+// ===== FIN DEL ARCHIVO =====Confirmar.disabled = true;
+    }
+}
+
+function validarFormularioEntrega() {
+    const nombre = document.getElementById('nombreDestinatario').value.trim();
+    const dni = document.getElementById('dniDestinatario').value.trim();
+    const btnConfirmar = document.querySelector('.btn-confirm');
+    
+    const nombreValido = nombre.length >= 3;
+    const dniValido = /^[0-9]{8}$/.test(dni);
+    
+    if (btnConfirmar) {
+        btn
