@@ -338,6 +338,7 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
                 <span><i class="fas fa-chart-bar"></i> Reportes</span>
                 <i class="fas fa-chevron-down"></i>
             </a>
+            
             <ul class="submenu" role="menu">
                 <li><a href="../reportes/inventario.php" role="menuitem"><i class="fas fa-warehouse"></i> Inventario General</a></li>
                 <li><a href="../reportes/movimientos.php" role="menuitem"><i class="fas fa-exchange-alt"></i> Movimientos</a></li>
@@ -496,6 +497,7 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
         </div>
     </section>
 
+
     <!-- Lista de productos -->
     <section class="products-section" id="productsSection">
         <?php if ($result_productos && $result_productos->num_rows > 0): ?>
@@ -594,6 +596,7 @@ function obtenerUrlRetornoAlmacen($almacen_id) {
                                         <?php endif; ?>
                                     </div>
                                 </td>
+
 
                                 <!-- Stock -->
                                 <td class="stock-cell">
