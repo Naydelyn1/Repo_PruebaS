@@ -38,13 +38,31 @@ if ($usuario_rol !== 'admin') {
     exit();
 }
 
-// MODIFICACIÓN DE SEGURIDAD: Obtener ID del almacén usando sesión
-if (isset($_SESSION['edit_almacen_id'])) {
+// ✅ OBTENER ID DEL ALMACÉN - MEJORADO
+$almacen_id = null;
+
+// 1. Primero verificar si viene de formulario POST (envío del formulario de edición)
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["almacen_id"])) {
+    $almacen_id = (int) $_POST["almacen_id"];
+}
+// 2. Si no, verificar si hay ID en la sesión (navegación desde redirect)
+elseif (isset($_SESSION['edit_almacen_id'])) {
     $almacen_id = (int) $_SESSION['edit_almacen_id'];
-    // Limpiar la sesión después de obtener el ID
-    unset($_SESSION['edit_almacen_id']);
-} else {
+    // Limpiar la sesión después de obtener el ID (solo si no es POST)
+    if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+        unset($_SESSION['edit_almacen_id']);
+    }
+}
+// 3. Si no hay ningún ID válido, redirigir
+else {
     $_SESSION['error'] = "Acceso no válido.";
+    header("Location: listar.php");
+    exit();
+}
+
+// Validar que el ID sea válido
+if (!$almacen_id || $almacen_id <= 0) {
+    $_SESSION['error'] = "ID de almacén no válido.";
     header("Location: listar.php");
     exit();
 }
@@ -69,58 +87,96 @@ $error = "";
 $nombre = $almacen['nombre'];
 $ubicacion = $almacen['ubicacion'];
 
-// MODIFICACIÓN DE SEGURIDAD: Procesar formulario con ID en campo hidden
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Reobtener el ID del formulario hidden
-    $almacen_id = (int) $_POST["almacen_id"];
+// ✅ PROCESAR FORMULARIO DE EDICIÓN - MEJORADO
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["almacen_id"])) {
+    // Mantener el ID en la sesión durante el procesamiento
+    $_SESSION['edit_almacen_id'] = $almacen_id;
     
+    // Validar campos requeridos
     if (!empty($_POST["nombre"]) && !empty($_POST["ubicacion"])) {
         $nuevo_nombre = trim($_POST["nombre"]);
         $nueva_ubicacion = trim($_POST["ubicacion"]);
 
-        // Verificar si el nuevo nombre ya existe (excepto el actual)
-        $sql_check = "SELECT id FROM almacenes WHERE nombre = ? AND id != ?";
-        $stmt_check = $conn->prepare($sql_check);
-        $stmt_check->bind_param("si", $nuevo_nombre, $almacen_id);
-        $stmt_check->execute();
-        $stmt_check->store_result();
-
-        if ($stmt_check->num_rows > 0) {
-            $error = "⚠️ Ya existe un almacén con ese nombre.";
+        // Validaciones adicionales
+        if (strlen($nuevo_nombre) < 3) {
+            $error = "⚠️ El nombre del almacén debe tener al menos 3 caracteres.";
+        } elseif (strlen($nueva_ubicacion) < 5) {
+            $error = "⚠️ La ubicación debe tener al menos 5 caracteres.";
         } else {
-            // Actualizar el almacén
-            $sql_update = "UPDATE almacenes SET nombre = ?, ubicacion = ? WHERE id = ?";
-            $stmt_update = $conn->prepare($sql_update);
+            // Verificar si el nuevo nombre ya existe (excepto el actual)
+            $sql_check = "SELECT id FROM almacenes WHERE nombre = ? AND id != ?";
+            $stmt_check = $conn->prepare($sql_check);
+            $stmt_check->bind_param("si", $nuevo_nombre, $almacen_id);
+            $stmt_check->execute();
+            $stmt_check->store_result();
 
-            if ($stmt_update) {
-                $stmt_update->bind_param("ssi", $nuevo_nombre, $nueva_ubicacion, $almacen_id);
-                if ($stmt_update->execute()) {
-                    // Registrar la acción en logs (opcional)
-                    $usuario_id = $_SESSION["user_id"];
-                    $sql_log = "INSERT INTO logs_actividad (usuario_id, accion, detalle, fecha_accion) 
-                                VALUES (?, 'EDITAR_ALMACEN', ?, NOW())";
-                    $stmt_log = $conn->prepare($sql_log);
-                    $detalle = "Editó el almacén ID {$almacen_id}: '{$nombre}' -> '{$nuevo_nombre}'";
-                    $stmt_log->bind_param("is", $usuario_id, $detalle);
-                    $stmt_log->execute();
-                    $stmt_log->close();
-                    
-                    $_SESSION['success'] = "✅ Almacén actualizado con éxito.";
-                    // Redirigir de forma segura usando sesión
-                    $_SESSION['view_almacen_id'] = $almacen_id;
-                    header("Location: ver-almacen.php");
-                    exit();
-                } else {
-                    $error = "❌ Error al actualizar el almacén: " . $stmt_update->error;
-                }
-                $stmt_update->close();
+            if ($stmt_check->num_rows > 0) {
+                $error = "⚠️ Ya existe un almacén con ese nombre.";
             } else {
-                $error = "❌ Error en la consulta SQL: " . $conn->error;
+                // ✅ INICIAR TRANSACCIÓN PARA SEGURIDAD
+                $conn->begin_transaction();
+                
+                try {
+                    // Actualizar el almacén
+                    $sql_update = "UPDATE almacenes SET nombre = ?, ubicacion = ? WHERE id = ?";
+                    $stmt_update = $conn->prepare($sql_update);
+
+                    if ($stmt_update) {
+                        $stmt_update->bind_param("ssi", $nuevo_nombre, $nueva_ubicacion, $almacen_id);
+                        
+                        if ($stmt_update->execute()) {
+                            // Verificar que realmente se actualizó
+                            if ($stmt_update->affected_rows > 0) {
+                                // Registrar la acción en logs
+                                $usuario_id = $_SESSION["user_id"];
+                                $sql_log = "INSERT INTO logs_actividad (usuario_id, accion, detalle, fecha_accion) 
+                                            VALUES (?, 'EDITAR_ALMACEN', ?, NOW())";
+                                $stmt_log = $conn->prepare($sql_log);
+                                $detalle = "Editó el almacén ID {$almacen_id}: '{$nombre}' -> '{$nuevo_nombre}', '{$ubicacion}' -> '{$nueva_ubicacion}'";
+                                $stmt_log->bind_param("is", $usuario_id, $detalle);
+                                $stmt_log->execute();
+                                $stmt_log->close();
+                                
+                                // ✅ CONFIRMAR TRANSACCIÓN
+                                $conn->commit();
+                                
+                                $_SESSION['success'] = "✅ Almacén actualizado con éxito.";
+                                
+                                // Limpiar sesión de edición y redirigir
+                                unset($_SESSION['edit_almacen_id']);
+                                $_SESSION['view_almacen_id'] = $almacen_id;
+                                header("Location: ver-almacen.php");
+                                exit();
+                            } else {
+                                // No se realizaron cambios (datos iguales)
+                                $conn->rollback();
+                                $error = "⚠️ No se detectaron cambios para actualizar.";
+                            }
+                        } else {
+                            throw new Exception("Error al ejecutar la actualización: " . $stmt_update->error);
+                        }
+                        $stmt_update->close();
+                    } else {
+                        throw new Exception("Error en la preparación de la consulta: " . $conn->error);
+                    }
+                    
+                } catch (Exception $e) {
+                    // ✅ REVERTIR TRANSACCIÓN EN CASO DE ERROR
+                    $conn->rollback();
+                    $error = "❌ Error al actualizar el almacén: " . $e->getMessage();
+                    error_log("Error al actualizar almacén ID {$almacen_id}: " . $e->getMessage());
+                }
             }
+            $stmt_check->close();
         }
-        $stmt_check->close();
     } else {
         $error = "⚠️ Todos los campos son obligatorios.";
+    }
+    
+    // Actualizar valores mostrados si hubo error
+    if (!empty($error)) {
+        $nombre = isset($_POST["nombre"]) ? trim($_POST["nombre"]) : $almacen['nombre'];
+        $ubicacion = isset($_POST["ubicacion"]) ? trim($_POST["ubicacion"]) : $almacen['ubicacion'];
     }
 }
 ?>
@@ -297,8 +353,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
 
         <form id="formEditarAlmacen" action="" method="POST" autocomplete="off">
-            <!-- CAMPO HIDDEN PARA SEGURIDAD -->
-            <input type="hidden" name="almacen_id" value="<?= $almacen_id ?>">
+            <!-- ✅ CAMPO HIDDEN PARA SEGURIDAD MEJORADO -->
+            <input type="hidden" name="almacen_id" value="<?= htmlspecialchars($almacen_id) ?>">
             
             <div class="form-group">
                 <label for="nombre" class="form-label">
@@ -315,10 +371,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     required
                     autocomplete="off"
                     maxlength="100"
+                    minlength="3"
                 >
                 <div class="field-hint">
                     <i class="fas fa-info-circle"></i>
-                    Ingrese un nombre descriptivo y único para el almacén
+                    Ingrese un nombre descriptivo y único para el almacén (mínimo 3 caracteres)
                 </div>
             </div>
 
@@ -337,10 +394,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     required
                     autocomplete="off"
                     maxlength="200"
+                    minlength="5"
                 >
                 <div class="field-hint">
                     <i class="fas fa-info-circle"></i>
-                    Dirección completa o referencia de la ubicación del almacén
+                    Dirección completa o referencia de la ubicación del almacén (mínimo 5 caracteres)
                 </div>
             </div>
 
@@ -405,10 +463,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const submenuContainers = document.querySelectorAll('.submenu-container');
     const formEditar = document.getElementById('formEditarAlmacen');
     
-    // Valores originales para detectar cambios
+    // ✅ VALORES ORIGINALES PARA DETECTAR CAMBIOS MEJORADO
     const valoresOriginales = {
-        nombre: document.getElementById('nombre').value,
-        ubicacion: document.getElementById('ubicacion').value
+        nombre: '<?php echo htmlspecialchars($almacen['nombre'], ENT_QUOTES, 'UTF-8'); ?>',
+        ubicacion: '<?php echo htmlspecialchars($almacen['ubicacion'], ENT_QUOTES, 'UTF-8'); ?>'
     };
     
     // Toggle del menú móvil
@@ -487,15 +545,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Detectar cambios en el formulario
+    // ✅ DETECTAR CAMBIOS MEJORADO
     function detectarCambios() {
-        const nombre = document.getElementById('nombre').value;
-        const ubicacion = document.getElementById('ubicacion').value;
+        const nombre = document.getElementById('nombre').value.trim();
+        const ubicacion = document.getElementById('ubicacion').value.trim();
         
         return nombre !== valoresOriginales.nombre || ubicacion !== valoresOriginales.ubicacion;
     }
     
-    // Validación y envío del formulario con confirmación
+    // ✅ VALIDACIÓN Y ENVÍO DEL FORMULARIO MEJORADO
     if (formEditar) {
         formEditar.addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -526,7 +584,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Confirmación antes de guardar
-            const confirmado = await confirmarEdicionUsuario('<?php echo htmlspecialchars($almacen['nombre']); ?>');
+            const confirmado = await confirmarEdicionUsuario('<?php echo htmlspecialchars($almacen['nombre'], ENT_QUOTES, 'UTF-8'); ?>');
             
             if (confirmado) {
                 const btnSubmit = document.getElementById('btnGuardar');
@@ -536,8 +594,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
                 btnSubmit.disabled = true;
                 
-                // Enviar formulario
-                this.submit();
+                // ✅ ENVIAR FORMULARIO CON VALIDACIÓN ADICIONAL
+                try {
+                    this.submit();
+                } catch (error) {
+                    console.error('Error al enviar formulario:', error);
+                    mostrarNotificacion('Error al procesar el formulario', 'error');
+                    
+                    // Restaurar botón
+                    btnSubmit.innerHTML = originalText;
+                    btnSubmit.disabled = false;
+                }
             }
         });
     }
@@ -576,9 +643,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Advertencia al salir sin guardar
+    // ✅ ADVERTENCIA AL SALIR SIN GUARDAR MEJORADA
+    let formSubmitted = false;
+    
+    if (formEditar) {
+        formEditar.addEventListener('submit', function() {
+            formSubmitted = true;
+        });
+    }
+    
     window.addEventListener('beforeunload', function(e) {
-        if (detectarCambios()) {
+        if (!formSubmitted && detectarCambios()) {
             e.preventDefault();
             e.returnValue = '';
         }
@@ -621,6 +696,22 @@ function validarCampo(input, minLength, mensaje) {
 
 // FUNCIÓN SEGURA PARA VOLVER A VER ALMACÉN
 function volverVerAlmacen() {
+    // Verificar si hay cambios sin guardar
+    const nombre = document.getElementById('nombre').value.trim();
+    const ubicacion = document.getElementById('ubicacion').value.trim();
+    const valoresOriginales = {
+        nombre: '<?php echo htmlspecialchars($almacen['nombre'], ENT_QUOTES, 'UTF-8'); ?>',
+        ubicacion: '<?php echo htmlspecialchars($almacen['ubicacion'], ENT_QUOTES, 'UTF-8'); ?>'
+    };
+    
+    const hayCambios = nombre !== valoresOriginales.nombre || ubicacion !== valoresOriginales.ubicacion;
+    
+    if (hayCambios) {
+        if (!confirm('Tienes cambios sin guardar. ¿Estás seguro de que deseas salir sin guardar?')) {
+            return;
+        }
+    }
+    
     // Crear formulario oculto para navegación segura
     const form = document.createElement('form');
     form.method = 'POST';
@@ -707,6 +798,76 @@ document.addEventListener('keydown', function(e) {
 document.addEventListener('mousedown', function() {
     document.body.classList.remove('keyboard-navigation');
 });
+
+// ✅ SISTEMA DE NOTIFICACIONES MEJORADO
+function mostrarNotificacion(mensaje, tipo = 'info', duracion = 5000) {
+    let container = document.getElementById('notificaciones-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'notificaciones-container';
+        container.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            max-width: 400px;
+        `;
+        document.body.appendChild(container);
+    }
+
+    const iconos = {
+        exito: 'fa-check-circle',
+        error: 'fa-exclamation-triangle', 
+        warning: 'fa-exclamation-circle',
+        info: 'fa-info-circle'
+    };
+
+    const colores = {
+        exito: '#28a745',
+        error: '#dc3545',
+        warning: '#ffc107', 
+        info: '#0a253c'
+    };
+
+    const notificacion = document.createElement('div');
+    notificacion.className = `notificacion ${tipo}`;
+    notificacion.style.cssText = `
+        background: white;
+        border-left: 5px solid ${colores[tipo] || colores.info};
+        padding: 15px 20px;
+        margin-bottom: 10px;
+        border-radius: 0 8px 8px 0;
+        box-shadow: 0 4px 12px rgba(10, 37, 60, 0.15);
+        position: relative;
+        animation: slideInRight 0.4s ease;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    `;
+
+    notificacion.innerHTML = `
+        <i class="fas ${iconos[tipo] || iconos.info}" style="font-size: 20px; color: ${colores[tipo] || colores.info};"></i>
+        <span style="flex: 1; color: #0a253c; font-weight: 500;">${mensaje}</span>
+        <button class="cerrar" aria-label="Cerrar notificación" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #666; padding: 0;">&times;</button>
+    `;
+
+    container.appendChild(notificacion);
+
+    const cerrarBtn = notificacion.querySelector('.cerrar');
+    cerrarBtn.addEventListener('click', () => {
+        notificacion.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => notificacion.remove(), 300);
+    });
+
+    if (duracion > 0) {
+        setTimeout(() => {
+            if (notificacion.parentNode) {
+                notificacion.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => notificacion.remove(), 300);
+            }
+        }, duracion);
+    }
+}
 </script>
 
 <style>
@@ -719,6 +880,16 @@ document.addEventListener('mousedown', function() {
         opacity: 0;
         transform: translateY(-20px);
     }
+}
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideOutRight {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(30px); }
 }
 
 .field-error {
@@ -792,6 +963,59 @@ input.invalid {
 
 .breadcrumb-btn:hover {
     color: #0056b3;
+}
+
+/* Estilos mejorados para el formulario */
+.form-group input:focus {
+    border-color: #0a253c;
+    box-shadow: 0 0 0 3px rgba(10, 37, 60, 0.1);
+    outline: none;
+}
+
+.form-group input[required]:valid {
+    border-color: #28a745;
+}
+
+.form-group input[required]:invalid:not(:placeholder-shown) {
+    border-color: #dc3545;
+}
+
+/* Indicadores de carga mejorados */
+.btn-submit:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn-submit .fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Mejoras de accesibilidad */
+.keyboard-navigation *:focus {
+    outline: 2px solid #0a253c;
+    outline-offset: 2px;
+}
+
+/* Responsividad mejorada */
+@media (max-width: 768px) {
+    .form-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .form-actions button {
+        width: 100%;
+    }
+    
+    .additional-actions {
+        grid-template-columns: 1fr;
+    }
 }
 </style>
 </body>
