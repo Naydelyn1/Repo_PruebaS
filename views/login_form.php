@@ -38,6 +38,10 @@
         <!-- Sección Derecha: Formulario de Login -->
         <div class="right-section">
             <h2>Login</h2>
+            
+            <!-- Área para mensajes del sistema -->
+            <div id="messages-area"></div>
+            
             <form action="../auth/login.php" method="POST" id="loginForm">
                 <div class="input-container">
                     <label for="correo">Correo Electrónico:</label>
@@ -82,280 +86,35 @@
                     Iniciar Sesión
                 </button>
             </form>
+
+            <!-- Opciones adicionales -->
+            <div class="additional-options">
+                <p>¿Problemas para acceder? <button type="button" id="helpBtn" class="link-button">Obtener ayuda</button></p>
+            </div>
         </div>
     </div>
 
-    <!-- JavaScript para mejorar la experiencia del usuario -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('loginForm');
-            const submitBtn = document.getElementById('loginBtn');
-            const inputs = form.querySelectorAll('input');
-            const passwordInput = document.getElementById('password');
-            const togglePassword = document.getElementById('togglePassword');
-            const eyeIcon = document.getElementById('eyeIcon');
+    <!-- Modal de ayuda -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeModal">&times;</span>
+            <h3><i class="fas fa-question-circle"></i> Opciones de ayuda</h3>
+            <div class="help-options">
+                <div class="help-option">
+                    <h4><i class="fas fa-clock"></i> Formulario bloqueado temporalmente</h4>
+                    <p>Si has intentado varias veces sin éxito, el formulario se bloquea por seguridad.</p>
+                    <button onclick="limpiarIntentosFallidos()" class="btn-help">Limpiar intentos</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            // Funcionalidad mostrar/ocultar contraseña
-            togglePassword.addEventListener('click', function() {
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
-                
-                // Cambiar el icono
-                if (type === 'text') {
-                    eyeIcon.classList.remove('fa-eye');
-                    eyeIcon.classList.add('fa-eye-slash');
-                    this.setAttribute('aria-label', 'Ocultar contraseña');
-                    this.setAttribute('title', 'Ocultar contraseña');
-                } else {
-                    eyeIcon.classList.remove('fa-eye-slash');
-                    eyeIcon.classList.add('fa-eye');
-                    this.setAttribute('aria-label', 'Mostrar contraseña');
-                    this.setAttribute('title', 'Mostrar contraseña');
-                }
-                
-                // Enfocar nuevamente el campo de contraseña
-                passwordInput.focus();
-            });
-
-            // Agregar efecto de carga al enviar formulario
-            form.addEventListener('submit', function(e) {
-                submitBtn.classList.add('loading');
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Iniciando sesión...';
-                
-                // Simular validación antes de enviar
-                let isValid = true;
-                inputs.forEach(input => {
-                    if (!input.checkValidity()) {
-                        isValid = false;
-                        input.focus();
-                        return false;
-                    }
-                });
-
-                if (!isValid) {
-                    e.preventDefault();
-                    submitBtn.classList.remove('loading');
-                    submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión';
-                    mostrarError('Por favor, completa todos los campos correctamente.');
-                }
-            });
-
-            // Mejorar la experiencia con el teclado
-            inputs.forEach((input, index) => {
-                input.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        const nextInput = inputs[index + 1];
-                        if (nextInput) {
-                            nextInput.focus();
-                        } else {
-                            form.submit();
-                        }
-                    }
-                });
-
-                // Agregar validación en tiempo real
-                input.addEventListener('blur', function() {
-                    if (this.value && !this.checkValidity()) {
-                        this.style.borderColor = '#dc3545';
-                        this.style.boxShadow = '0 0 0 3px rgba(220, 53, 69, 0.1)';
-                    } else if (this.value && this.checkValidity()) {
-                        this.style.borderColor = '#28a745';
-                        this.style.boxShadow = '0 0 0 3px rgba(40, 167, 69, 0.1)';
-                    }
-                });
-
-                input.addEventListener('input', function() {
-                    if (this.checkValidity()) {
-                        this.style.borderColor = '#28a745';
-                        this.style.boxShadow = '0 0 0 3px rgba(40, 167, 69, 0.1)';
-                    } else if (this.value) {
-                        this.style.borderColor = '#dc3545';
-                        this.style.boxShadow = '0 0 0 3px rgba(220, 53, 69, 0.1)';
-                    } else {
-                        this.style.borderColor = '#c8c9ca';
-                        this.style.boxShadow = 'none';
-                    }
-                });
-
-                // Limpiar estilos de validación al hacer focus
-                input.addEventListener('focus', function() {
-                    if (!this.value) {
-                        this.style.borderColor = '#0a253c';
-                        this.style.boxShadow = '0 0 0 3px rgba(10, 37, 60, 0.1), 0 8px 25px rgba(10, 37, 60, 0.1)';
-                    }
-                });
-            });
-
-            // Prevenir envío múltiple
-            let isSubmitting = false;
-            form.addEventListener('submit', function(e) {
-                if (isSubmitting) {
-                    e.preventDefault();
-                    return false;
-                }
-                isSubmitting = true;
-                
-                // Reset después de 5 segundos en caso de error
-                setTimeout(() => {
-                    isSubmitting = false;
-                    submitBtn.classList.remove('loading');
-                    submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión';
-                }, 5000);
-            });
-
-            // Función para mostrar errores
-            function mostrarError(mensaje) {
-                // Remover error anterior si existe
-                const errorAnterior = document.querySelector('.login-error');
-                if (errorAnterior) {
-                    errorAnterior.remove();
-                }
-
-                // Crear nuevo elemento de error
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'login-error';
-                errorDiv.innerHTML = `
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span>${mensaje}</span>
-                `;
-                
-                // Insertar antes del formulario
-                form.parentNode.insertBefore(errorDiv, form);
-                
-                // Auto-remover después de 5 segundos
-                setTimeout(() => {
-                    if (errorDiv.parentNode) {
-                        errorDiv.remove();
-                    }
-                }, 5000);
-            }
-
-            // Detectar si hay parámetros de error en la URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const error = urlParams.get('error');
-            if (error) {
-                let mensaje = 'Error desconocido';
-                switch(error) {
-                    case 'invalid_credentials':
-                        mensaje = 'Credenciales incorrectas. Verifica tu correo y contraseña.';
-                        break;
-                    case 'empty_fields':
-                        mensaje = 'Por favor, completa todos los campos.';
-                        break;
-                    case 'user_not_found':
-                        mensaje = 'Usuario no encontrado en el sistema.';
-                        break;
-                    case 'account_disabled':
-                        mensaje = 'Tu cuenta está deshabilitada. Contacta al administrador.';
-                        break;
-                    default:
-                        mensaje = 'Error al iniciar sesión. Inténtalo nuevamente.';
-                }
-                mostrarError(mensaje);
-            }
-        });
-
-        // Manejar errores de carga de imagen
-        document.querySelector('.logo').addEventListener('error', function() {
-            this.style.display = 'none';
-            console.warn('Logo no pudo cargar, verificar ruta de imagen');
-        });
-
-        // Accessibility: Manejar navegación con teclado
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Tab') {
-                document.body.classList.add('keyboard-navigation');
-            }
-        });
-
-        document.addEventListener('mousedown', function() {
-            document.body.classList.remove('keyboard-navigation');
-        });
-
-        // Prevenir ataques de fuerza bruta básicos
-        let intentosFallidos = parseInt(localStorage.getItem('intentosFallidos') || '0');
-        const maxIntentos = 5;
-        const tiempoBloqueo = 15 * 60 * 1000; // 15 minutos
-
-        if (intentosFallidos >= maxIntentos) {
-            const tiempoBloqueoInicio = parseInt(localStorage.getItem('tiempoBloqueoInicio') || '0');
-            const tiempoRestante = tiempoBloqueoInicio + tiempoBloqueo - Date.now();
-            
-            if (tiempoRestante > 0) {
-                const form = document.getElementById('loginForm');
-                const submitBtn = document.getElementById('loginBtn');
-                
-                form.style.opacity = '0.5';
-                form.style.pointerEvents = 'none';
-                submitBtn.disabled = true;
-                
-                const minutos = Math.ceil(tiempoRestante / (60 * 1000));
-                mostrarError(`Demasiados intentos fallidos. Inténtalo nuevamente en ${minutos} minutos.`);
-                
-                setTimeout(() => {
-                    localStorage.removeItem('intentosFallidos');
-                    localStorage.removeItem('tiempoBloqueoInicio');
-                    location.reload();
-                }, tiempoRestante);
-            } else {
-                localStorage.removeItem('intentosFallidos');
-                localStorage.removeItem('tiempoBloqueoInicio');
-            }
-        }
-
-        // Registrar intento fallido si hay error en la URL
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('error')) {
-            intentosFallidos++;
-            localStorage.setItem('intentosFallidos', intentosFallidos.toString());
-            
-            if (intentosFallidos >= maxIntentos) {
-                localStorage.setItem('tiempoBloqueoInicio', Date.now().toString());
-            }
-        }
-    </script>
-
-    <!-- Estilos adicionales para el componente de error -->
-    <style>
-        .login-error {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
-            color: #dc3545;
-            padding: 15px 20px;
-            border-radius: 8px;
-            border-left: 4px solid #dc3545;
-            margin-bottom: 20px;
-            font-weight: 500;
-            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.1);
-            animation: slideInDown 0.3s ease;
-        }
-
-        .login-error i {
-            font-size: 18px;
-            flex-shrink: 0;
-        }
-
-        @keyframes slideInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Estilos para navegación por teclado */
-        .keyboard-navigation input:focus,
-        .keyboard-navigation button:focus,
-        .keyboard-navigation .password-toggle:focus {
-            outline: 3px solid #0a253c !important;
-            outline-offset: 2px !important;
-        }
-    </style>
+    <!-- JavaScript principal del login -->
+    <script src="../assets/js/login-functions.js"></script>
+    
+    <!-- Herramientas de administrador (solo para desarrollo) -->
+    <?php if (isset($_GET['admin']) && $_GET['admin'] === 'true'): ?>
+    <script src="../assets/js/admin-utils.js"></script>
+    <?php endif; ?>
 </body>
 </html>

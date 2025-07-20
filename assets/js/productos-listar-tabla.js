@@ -357,19 +357,6 @@ function mostrarIndicadorCarga() {
     }
 }
 
-
-// ===== FUNCIÓN MEJORADA PARA ACTUALIZAR CARRITO =====
-function actualizarCarrito() {
-    const carritoLista = document.getElementById('carritoLista');
-    const carritoContador = document.querySelector('.carrito-contador');
-    const totalUnidades = document.getElementById('totalUnidades');
-    const btnProceder = document.querySelector('.btn-proceder');
-    const indicadorCount = document.querySelector('.indicator-count');
-    
-    // Guardar valor anterior para animación
-    const valorAnterior = parseInt(carritoContador.textContent) || 0;
-    const valorNuevo = carritoEntrega.length;
-
 function precargarPaginaSiguiente() {
     const currentPage = parseInt(document.body.dataset.page);
     const totalPages = parseInt(document.body.dataset.totalPages);
@@ -464,7 +451,6 @@ function ajustarPosicionNotificaciones() {
     const carritoElement = document.getElementById('carritoEntrega');
     const carritoVisible = carritoElement && carritoElement.classList.contains('show');
     const carritoMinimizado = carritoElement && carritoElement.classList.contains('minimized');
-
     
     if (carritoVisible && !carritoMinimizado) {
         // Si el carrito está visible y no minimizado, mover notificaciones más a la izquierda

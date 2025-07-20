@@ -25,7 +25,7 @@ if (!isset($_GET['id']) || !filter_var($_GET['id'], FILTER_VALIDATE_INT)) {
 
 $producto_id = $_GET['id'];
 
-//  MANTENER LA LÓGICA ORIGINAL - OBTENER Y PROCESAR PARÁMETROS DE CONTEXTO
+// ⭐ MANTENER LA LÓGICA ORIGINAL - OBTENER Y PROCESAR PARÁMETROS DE CONTEXTO
 $context_params = isset($_GET['from']) ? $_GET['from'] : '';
 parse_str($context_params, $context_array);
 
@@ -100,7 +100,7 @@ if (!$producto) {
     exit();
 }
 
-// CONSTRUIR URLs DE NAVEGACIÓN CON CONTEXTO
+// ⭐ CONSTRUIR URLs DE NAVEGACIÓN CON CONTEXTO
 $return_url = buildReturnUrl($context_array, $producto);
 $return_text = getContextDescription($context_array, $producto);
 $should_return_to_warehouse = shouldReturnToWarehouse($context_array, $producto);
@@ -230,7 +230,6 @@ if ($result_pendientes && $row_pendientes = $result_pendientes->fetch_assoc()) {
             </a>
         </li>
 
-
         <!-- Users Section - Only visible to administrators -->
         <?php if ($usuario_rol == 'admin'): ?>
         <li class="submenu-container">
@@ -259,7 +258,6 @@ if ($result_pendientes && $row_pendientes = $result_pendientes->fetch_assoc()) {
             </ul>
         </li>
         
-
         <!-- Historial Section - Reemplaza la sección de Entregas -->
         <li class="submenu-container">
             <a href="#" aria-label="Menú Historial" aria-expanded="false" role="button" tabindex="0">
@@ -272,7 +270,6 @@ if ($result_pendientes && $row_pendientes = $result_pendientes->fetch_assoc()) {
                 
             </ul>
         </li>
-
         
         <!-- Notifications Section - Con badge rojo de notificaciones -->
         <li class="submenu-container">
@@ -522,7 +519,6 @@ if ($result_pendientes && $row_pendientes = $result_pendientes->fetch_assoc()) {
                 </div>
             </div>
 
-
             <!-- Historial de Movimientos -->
             <div class="movements-card">
                 <div class="card-header">
@@ -577,7 +573,6 @@ if ($result_pendientes && $row_pendientes = $result_pendientes->fetch_assoc()) {
             </div>
         </section>
 
-        
         <!-- Panel Lateral -->
         <aside class="sidebar-panel">
             <!-- Solicitudes de Transferencia -->
@@ -627,7 +622,6 @@ if ($result_pendientes && $row_pendientes = $result_pendientes->fetch_assoc()) {
                 </div>
             </div>
 
-
             <!-- Productos Similares -->
             <div class="similar-products-card">
                 <div class="card-header">
@@ -670,7 +664,6 @@ if ($result_pendientes && $row_pendientes = $result_pendientes->fetch_assoc()) {
                     <?php endif; ?>
                 </div>
             </div>
-
 
             <!-- Acciones Rápidas -->
             <div class="quick-actions-card">

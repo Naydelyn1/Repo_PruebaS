@@ -286,6 +286,7 @@ body {
     gap: 15px;
     align-items: end;
     border: 1px solid var(--list-border);
+    position: relative;
 }
 
 .filter-form::before {
@@ -309,6 +310,19 @@ body {
     color: var(--list-primary);
     background: var(--list-surface);
     transition: var(--list-transition);
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Estilo específico para select */
+.filter-form select {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236c757d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+    cursor: pointer;
 }
 
 .filter-form input:focus,
@@ -317,6 +331,19 @@ body {
     border-color: var(--list-primary);
     background: var(--list-background);
     box-shadow: 0 0 0 3px rgba(10, 37, 60, 0.1);
+}
+
+.filter-form select:focus {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a253c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+}
+
+/* Fix para las opciones del select */
+.filter-form select option {
+    padding: 8px 12px;
+    font-size: 14px;
+    background-color: white;
+    color: var(--list-primary);
+    font-weight: normal;
 }
 
 .filter-form button {

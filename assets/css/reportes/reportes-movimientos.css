@@ -17,7 +17,7 @@
     --mov-text-light: #6c757d;
     --mov-border: #dee2e6;
     --mov-accent: #6f42c1;
-
+    
     /* Dimensiones específicas */
     --mov-sidebar-width: 280px;
     --mov-border-radius: 8px;
@@ -25,7 +25,7 @@
     --mov-shadow: 0 2px 8px rgba(10, 37, 60, 0.1);
     --mov-shadow-hover: 0 4px 15px rgba(10, 37, 60, 0.15);
     --mov-transition: all 0.3s ease;
-
+    
     /* Específicos para movimientos */
     --mov-card-padding: 25px;
     --mov-gap: 20px;
@@ -177,7 +177,7 @@ body {
 }
 
 /* ===== SUBMENÚS ===== */
-.submenu-container>a {
+.submenu-container > a {
     cursor: pointer;
     justify-content: space-between;
 }
@@ -227,12 +227,12 @@ body {
     font-weight: 600;
 }
 
-.submenu-container>a .fa-chevron-down {
+.submenu-container > a .fa-chevron-down {
     transition: transform 0.3s ease;
     margin-left: auto;
 }
 
-.submenu-container.active>a .fa-chevron-down {
+.submenu-container.active > a .fa-chevron-down {
     transform: rotate(180deg);
 }
 
@@ -269,16 +269,13 @@ body {
 }
 
 @keyframes pulseBadge {
-
-    0%,
-    100% {
-        transform: scale(1);
-        opacity: 1;
+    0%, 100% { 
+        transform: scale(1); 
+        opacity: 1; 
     }
-
-    50% {
-        transform: scale(1.1);
-        opacity: 0.8;
+    50% { 
+        transform: scale(1.1); 
+        opacity: 0.8; 
     }
 }
 
@@ -429,21 +426,10 @@ body {
     opacity: 0.8;
 }
 
-.stat-card.total .stat-icon {
-    color: var(--mov-accent);
-}
-
-.stat-card.completados .stat-icon {
-    color: var(--mov-success);
-}
-
-.stat-card.pendientes .stat-icon {
-    color: var(--mov-warning);
-}
-
-.stat-card.rechazados .stat-icon {
-    color: var(--mov-danger);
-}
+.stat-card.total .stat-icon { color: var(--mov-accent); }
+.stat-card.completados .stat-icon { color: var(--mov-success); }
+.stat-card.pendientes .stat-icon { color: var(--mov-warning); }
+.stat-card.rechazados .stat-icon { color: var(--mov-danger); }
 
 .stat-value {
     font-size: 2.5rem;
@@ -453,21 +439,10 @@ body {
     line-height: 1;
 }
 
-.stat-card.total .stat-value {
-    color: var(--mov-accent);
-}
-
-.stat-card.completados .stat-value {
-    color: var(--mov-success);
-}
-
-.stat-card.pendientes .stat-value {
-    color: var(--mov-warning);
-}
-
-.stat-card.rechazados .stat-value {
-    color: var(--mov-danger);
-}
+.stat-card.total .stat-value { color: var(--mov-accent); }
+.stat-card.completados .stat-value { color: var(--mov-success); }
+.stat-card.pendientes .stat-value { color: var(--mov-warning); }
+.stat-card.rechazados .stat-value { color: var(--mov-danger); }
 
 .stat-label {
     font-size: 0.9rem;
@@ -834,7 +809,6 @@ body {
         max-height: 0;
         transform: translateY(-10px);
     }
-
     to {
         opacity: 1;
         max-height: 300px;
@@ -847,7 +821,6 @@ body {
         opacity: 0;
         transform: translateY(-30px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
@@ -859,7 +832,6 @@ body {
         opacity: 0;
         transform: translateX(100%);
     }
-
     to {
         opacity: 1;
         transform: translateX(0);
@@ -878,30 +850,30 @@ body {
         transform: translateX(-100%);
         width: 100%;
     }
-
+    
     .sidebar.active {
         transform: translateX(0);
     }
-
+    
     .content {
         margin-left: 0;
         padding: 20px 15px;
     }
-
+    
     .content.with-sidebar {
         opacity: 0.3;
         pointer-events: none;
     }
-
+    
     .menu-toggle {
         display: block;
     }
-
+    
     .header-content {
         flex-direction: column;
         text-align: center;
     }
-
+    
     .filters-form {
         grid-template-columns: 1fr;
         gap: 15px;
@@ -912,49 +884,49 @@ body {
     .content {
         padding: 20px 15px;
     }
-
+    
     .movimientos-header {
         padding: 25px 20px;
         margin-bottom: 25px;
     }
-
+    
     .header-info h1 {
         font-size: 1.5rem;
     }
-
+    
     .stats-grid {
         grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
         gap: 15px;
     }
-
+    
     .stat-card {
         padding: 20px;
         min-height: 100px;
     }
-
+    
     .stat-icon {
         font-size: 2rem;
         margin-bottom: 10px;
     }
-
+    
     .stat-value {
         font-size: 2rem;
     }
-
+    
     .filters-section,
     .movimientos-table-section {
         padding: 20px;
     }
-
+    
     .header-actions {
         width: 100%;
         justify-content: center;
     }
-
+    
     .movimientos-table {
         font-size: 12px;
     }
-
+    
     .movimientos-table thead th,
     .movimientos-table tbody td {
         padding: 10px 8px;
@@ -965,62 +937,62 @@ body {
     .content {
         padding: 15px 10px;
     }
-
+    
     .movimientos-header {
         padding: 20px 15px;
     }
-
+    
     .header-info h1 {
         font-size: 1.3rem;
         flex-direction: column;
         gap: 10px;
     }
-
+    
     .stats-grid {
         grid-template-columns: 1fr;
         gap: 12px;
     }
-
+    
     .stat-card {
         padding: 18px 15px;
         min-height: 90px;
     }
-
+    
     .stat-icon {
         font-size: 1.8rem;
         margin-bottom: 8px;
     }
-
+    
     .stat-value {
         font-size: 1.8rem;
     }
-
+    
     .stat-label {
         font-size: 0.8rem;
     }
-
+    
     .filters-section,
     .movimientos-table-section {
         padding: 18px 15px;
         border-radius: var(--mov-border-radius);
     }
-
+    
     .movimientos-table thead th,
     .movimientos-table tbody td {
         padding: 8px 6px;
         font-size: 11px;
     }
-
+    
     .estado-badge {
         padding: 4px 8px;
         font-size: 10px;
     }
-
+    
     .header-actions {
         flex-direction: column;
         align-items: stretch;
     }
-
+    
     .btn-export {
         padding: 12px;
         font-size: 14px;
@@ -1037,18 +1009,17 @@ body {
 
 /* Reducir movimiento para usuarios con preferencias de accesibilidad */
 @media (prefers-reduced-motion: reduce) {
-
     .movimientos-header,
     .stat-card,
     .movimientos-table tbody tr {
         animation: none !important;
         transition: none !important;
     }
-
+    
     .stat-card:hover {
         transform: none !important;
     }
-
+    
     .badge {
         animation: none !important;
     }
@@ -1056,19 +1027,18 @@ body {
 
 /* ===== MEJORAS DE CONTRASTE ===== */
 @media (prefers-contrast: high) {
-
     .movimientos-header,
     .stat-card,
     .filters-section,
     .movimientos-table-section {
         border: 3px solid var(--mov-primary);
     }
-
+    
     .btn-filter,
     .btn-export {
         border-width: 3px;
     }
-
+    
     .header-info h1,
     .stat-label,
     .filters-header h3 {
